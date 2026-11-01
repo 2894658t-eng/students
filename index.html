@@ -4,6 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام الحضور والتقييم الذكي المطور للمرحلة الثانوية</title>
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#172554">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="مستر أحمد جابر">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com/3.4.1"></script>
     <!-- Font Awesome Icons -->
@@ -128,7 +136,17 @@
         .dev-marquee-item { direction: rtl; padding: 0 3rem; display: inline-flex; align-items: center; gap: .5rem; }
         @keyframes devScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
         @media (prefers-reduced-motion: reduce) { .dev-marquee-track { animation: none; } }
-    </style>
+    
+        .login-bg{background:linear-gradient(135deg,#0f1f4d,#1e3a8a,#2563eb,#7c3aed,#0f1f4d);background-size:400% 400%;animation:loginGrad 14s ease infinite;overflow:hidden}
+        @keyframes loginGrad{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        .login-float{position:absolute;color:rgba(255,255,255,.13);animation:loginFloat 9s ease-in-out infinite;pointer-events:none}
+        @keyframes loginFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-28px) rotate(10deg)}}
+        #loginScreen .glass-card{background:rgba(255,255,255,.14)!important;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.3)!important;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+        #loginScreen .glass-card h2,#loginScreen .glass-card label{color:#fff!important}
+        #loginScreen .glass-card .text-center p{color:#dbeafe!important}
+        #loginScreen .glass-card input{background:rgba(255,255,255,.92)!important;color:#0F172A!important}
+        @media (prefers-reduced-motion:reduce){.login-bg,.login-float{animation:none}}
+</style>
 <script>
         (function () {
             try {
@@ -145,17 +163,23 @@
 <body class="bg-[#F1F5F9] text-[#0F172A] min-h-screen flex flex-col justify-between font-['Cairo'] antialiased">
 
     <!-- LOGIN SCREEN -->
-    <div id="loginScreen" class="fixed inset-0 z-[100] bg-[#172554]/95 backdrop-blur-md flex items-center justify-center p-4">
-        <div class="relative max-w-md w-full max-h-[95vh] overflow-y-auto bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#E2E8F0]">
+    <div id="loginScreen" class="fixed inset-0 z-[100] login-bg flex items-center justify-center p-4">
+        <i class="fa-solid fa-graduation-cap login-float text-6xl" style="top:8%;right:10%"></i>
+        <i class="fa-solid fa-book-open login-float text-5xl" style="top:70%;right:6%;animation-delay:-3s"></i>
+        <i class="fa-solid fa-qrcode login-float text-5xl" style="top:14%;left:8%;animation-delay:-5s"></i>
+        <i class="fa-solid fa-chart-line login-float text-6xl" style="top:72%;left:12%;animation-delay:-2s"></i>
+        <i class="fa-solid fa-award login-float text-4xl" style="top:44%;left:3%;animation-delay:-6s"></i>
+        <div class="relative glass-card max-w-md w-full max-h-[95vh] overflow-y-auto rounded-3xl p-6 sm:p-8">
             <div class="absolute top-4 left-4 flex gap-2" dir="ltr">
                 <button type="button" onclick="toggleLang()" title="Language / اللغة" class="px-2.5 py-1.5 bg-[#F1F5F9] text-[#64748B] rounded-lg text-[11px] font-bold border border-[#E2E8F0]"><i class="fa-solid fa-language"></i> <span class="lang-label">EN</span></button>
                 <button type="button" onclick="toggleTheme()" title="Dark / Light" class="px-2.5 py-1.5 bg-[#F1F5F9] text-[#64748B] rounded-lg text-[11px] font-bold border border-[#E2E8F0]"><i class="fa-solid fa-moon theme-ico"></i></button>
             </div>
             <div class="text-center space-y-3 mb-6">
                 <div class="w-16 h-16 bg-[#2563EB] rounded-2xl flex items-center justify-center mx-auto text-white shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-user-shield text-3xl"></i>
+                    <img class="app-logo w-14 h-14 rounded-full bg-white" alt="logo">
                 </div>
                 <h2 class="text-2xl font-black text-[#0F172A]">تسجيل دخول المسؤول</h2>
+                <p class="text-sm font-bold" style="color:#fcd34d!important">أهلاً بعودتك 👋</p>
                 <p class="text-xs text-[#64748B] font-medium">نظام إدارة وحضور الطلاب والامتحانات والمراحل الثانوية</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -185,7 +209,7 @@
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-2 flex flex-wrap items-center justify-between gap-2">
                 <div class="flex items-center gap-2 min-w-0">
                     <div class="p-2 bg-white/10 rounded-xl text-white border border-white/10 shrink-0">
-                        <i class="fa-solid fa-qrcode text-base"></i>
+                        <img class="app-logo w-7 h-7 rounded-full bg-white" alt="logo">
                     </div>
                     <div class="min-w-0">
                         <h1 class="font-extrabold text-sm sm:text-lg leading-tight truncate">نظام الحضور والتقييم الذكي للمرحلة الثانوية</h1>
@@ -254,6 +278,17 @@
 
             <!-- TAB 1: DASHBOARD -->
             <section id="dashboardTab" class="tab-content block space-y-6">
+                <div id="todayClassesCard" class="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm">
+                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                        <h3 class="font-bold text-[#0F172A] text-sm flex items-center gap-2"><i class="fa-solid fa-chalkboard-user text-[#2563EB]"></i> حصص اليوم: <span id="todayClassesCount" class="px-2.5 py-0.5 bg-blue-50 text-[#2563EB] rounded-full">0</span></h3>
+                        <button id="notifBtn" onclick="enableClassNotifications()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg"><i class="fa-solid fa-bell ml-1"></i> تفعيل إشعارات التذكير</button>
+                    </div>
+                    <div id="todayClassesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-xs"></div>
+                </div>
+                <div id="smartAlert" class="hidden bg-amber-50 border border-amber-100 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center gap-2 font-bold text-amber-700"><i class="fa-solid fa-triangle-exclamation text-lg animate-pulse"></i><span id="smartAlertText"></span></div>
+                    <button onclick="bulkAbsenceAlert()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl whitespace-nowrap"><i class="fa-brands fa-whatsapp ml-1"></i> إرسال تنبيه جماعي</button>
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div class="lg:col-span-5 bg-white p-6 rounded-2xl border border-[#E2E8F0] shadow-sm">
                         <h3 class="font-bold text-[#0F172A] text-sm mb-4 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-[#2563EB]"></i> ملخص حضور طلاب مجموعة اليوم</h3>
@@ -293,6 +328,7 @@
                             </div>
                         </div>
 
+                        <label class="flex items-center gap-2 text-xs font-bold text-[#64748B] cursor-pointer"><input type="checkbox" id="scanOverride"> تسجيل استثنائي (حصة تعويض / خارج أيام المجموعة)</label>
                         <div class="relative bg-slate-900 rounded-2xl overflow-hidden min-h-[260px] flex items-center justify-center border border-slate-800">
                             <div id="reader" class="w-full"></div>
                             <div id="cameraPlaceholder" class="text-center p-6 text-slate-400">
@@ -373,9 +409,14 @@
                         <h2 class="text-base font-bold text-[#0F172A]">إدارة الامتحانات والدرجات وترتيب الطلاب</h2>
                         <p class="text-xs text-[#64748B]">اختر الكويز لعرض الطلاب المخصصين له وإدخال درجاتهم بسهولة</p>
                     </div>
-                    <button onclick="openAddExamModal()" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="openLowModal()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-arrow-trend-down"></i> الطلاب أقل من نصف الدرجة
+                        </button>
+                        <button onclick="openAddExamModal()" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-file-pen"></i> إضافة امتحان جديد
                     </button>
+                    </div>
                 </div>
 
                 <!-- شريط الفلترة حسب الكويز والصف والمجموعة -->
@@ -442,6 +483,8 @@
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <select id="absenceGroupSelect" class="px-3 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-bold outline-none max-w-[220px]"></select>
+                        <button onclick="openAbsModal()" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm whitespace-nowrap"><i class="fa-solid fa-user-xmark"></i> الغياب أكثر من مرتين</button>
+                        <button onclick="bulkAbsenceToday()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm whitespace-nowrap"><i class="fa-brands fa-whatsapp"></i> تقرير الغياب الجماعي</button>
                         <button onclick="checkAndMarkAutoAbsence()" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm whitespace-nowrap">
                             <i class="fa-solid fa-user-clock"></i> فحص الغياب التلقائي
                         </button>
@@ -526,7 +569,7 @@
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                     <div class="md:col-span-2"><label class="block font-bold mb-1 text-xs">اختر المستحق لمتابعة السداد</label><select id="paymentPlanFilter" onchange="renderPaymentsTable()" class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></select></div>
-                    <div class="md:col-span-1"><label class="block font-bold mb-1 text-xs">البحث عن طالب بالاسم أو الكود</label><input id="paymentStudentSearch" oninput="renderPaymentsTable()" placeholder="اكتب اسم الطالب أو الكود..." class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></div><div class="md:col-span-1"><button onclick="deletePaymentPlan()" class="w-full py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-trash-can"></i> حذف هذا المستحق</button></div>
+                    <div class="md:col-span-1"><label class="block font-bold mb-1 text-xs">البحث عن طالب بالاسم أو الكود</label><input id="paymentStudentSearch" oninput="renderPaymentsTable()" placeholder="اكتب اسم الطالب أو الكود..." class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></div><div class="md:col-span-4"><button onclick="openUnpaidModal()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-user-clock"></i> عرض كل المتخلفين عن الدفع (كل الصفوف والمجموعات)</button></div><div class="md:col-span-1"><button onclick="deletePaymentPlan()" class="w-full py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-trash-can"></i> حذف هذا المستحق</button></div>
                     <div class="md:col-span-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 text-xs font-bold"><div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">عدد الطلاب</p><b id="paymentCountTotal" class="text-base text-slate-700">0</b></div><div class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">دفعوا كامل</p><b id="paymentCountPaid" class="text-base text-emerald-700">0</b></div><div class="p-2.5 bg-amber-50 border border-amber-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">دفعوا جزئياً</p><b id="paymentCountPartial" class="text-base text-amber-700">0</b></div><div class="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">لم يدفعوا</p><b id="paymentCountUnpaid" class="text-base text-rose-700">0</b></div><div class="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">إجمالي المطلوب (جنيه)</p><b id="paymentRequired" class="text-base text-blue-700">0</b></div><div class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">المحصّل (جنيه)</p><b id="paymentCollected" class="text-base text-emerald-700">0</b></div><div class="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">المتبقي لك (جنيه)</p><b id="paymentRemaining" class="text-base text-rose-700">0</b></div></div>
                 </div>
                 <div class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
@@ -611,6 +654,20 @@
                             <option value="PM" data-i18n-ampm="PM">م</option>
                         </select>
                     </div>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">وقت انتهاء الحصة *</label>
+                    <input type="hidden" id="inputGroupEndTime">
+                    <div class="flex gap-2" dir="ltr">
+                        <select id="geHour" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <span class="self-center font-bold">:</span>
+                        <select id="geMin" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="geAmPm" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
+                            <option value="AM">ص</option>
+                            <option value="PM">م</option>
+                        </select>
+                    </div>
+                    <p class="text-[10px] text-[#64748B] mt-1">هيظهر إشعار "انتهت الحصة" في الموقع كله عند الوقت ده.</p>
                 </div>
                 <div class="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                     <button type="button" onclick="closeModal('groupModal')" class="px-4 py-2 bg-[#F1F5F9] text-[#64748B] rounded-xl font-bold">إلغاء</button>
@@ -814,6 +871,7 @@
                 <button onclick="closeModal('barcodeCardModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="cardPrintArea" class="bg-[#172554] text-white rounded-2xl p-4 space-y-3 border-2 border-[#2563EB]">
+                <img class="app-logo w-16 h-16 mx-auto rounded-full bg-white" alt="logo">
                 <h4 id="cardStudentName" class="font-bold text-sm">--</h4>
                 <p id="cardStudentGrade" class="text-xs text-amber-300 font-bold">--</p>
                 <p id="cardStudentGroup" class="text-xs text-blue-200">--</p>
@@ -827,6 +885,118 @@
                 </div>
             </div>
             <button onclick="window.print()" class="px-4 py-2 bg-[#0F172A] hover:bg-slate-800 text-white text-xs font-bold rounded-xl"><i class="fa-solid fa-print ml-1"></i> طباعة</button>
+            
+        </div>
+    </div>
+
+    <div id="unpaidModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[80] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-3 text-xs max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 class="font-bold text-[#0F172A] text-sm"><i class="fa-solid fa-user-clock text-rose-600 ml-1"></i> المتخلفون عن الدفع (كل المستحقات)</h3>
+                <button onclick="closeModal('unpaidModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <select id="unpGrade" onchange="fillUnpGroups(); renderUnpaid()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select>
+                <select id="unpGroup" onchange="renderUnpaid()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"></select>
+                <input id="unpSearch" oninput="renderUnpaid()" placeholder="ابحث بالاسم أو الكود..." class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none">
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-rose-50 border border-rose-100 rounded-xl p-3">
+                <div class="font-bold text-rose-700" id="unpSummary"></div>
+                <div class="flex items-center gap-2">
+                    <select id="unpTarget" class="p-2 bg-white border border-[#E2E8F0] rounded-lg font-bold outline-none"><option value="parent">إلى ولي الأمر</option><option value="student">إلى الطالب</option></select>
+                    <button onclick="bulkUnpaidFromList()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i> إرسال جماعي للقائمة</button>
+                </div>
+            </div>
+            <div class="overflow-auto border border-[#E2E8F0] rounded-xl">
+                <table class="w-full text-right"><thead class="bg-[#F1F5F9] text-[#64748B] font-bold sticky top-0"><tr><th class="p-2.5">الطالب</th><th class="p-2.5">الكود (ID)</th><th class="p-2.5">الصف</th><th class="p-2.5">المجموعة</th><th class="p-2.5">المستحق</th><th class="p-2.5">المطلوب</th><th class="p-2.5">المدفوع</th><th class="p-2.5">المتبقي</th><th class="p-2.5">الاستحقاق</th><th class="p-2.5 text-center">إرسال واتساب</th></tr></thead>
+                <tbody id="unpBody" class="divide-y divide-[#E2E8F0]"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="absModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[80] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-3 text-xs max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 class="font-bold text-[#0F172A] text-sm"><i class="fa-solid fa-user-xmark text-amber-600 ml-1"></i> الطلاب الذين غابوا أكثر من مرتين</h3>
+                <button onclick="closeModal('absModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <select id="absGrade" onchange="fillAbsGroups(); renderAbsList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select>
+                <select id="absGroup" onchange="renderAbsList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"></select>
+                <select id="absPeriod" onchange="renderAbsList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"><option value="ALL">كل الفترات المسجلة</option><option value="MONTH">هذا الشهر فقط</option></select>
+                <input id="absSearch" oninput="renderAbsList()" placeholder="ابحث بالاسم أو الكود..." class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none">
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                <div class="font-bold text-amber-700" id="absSummary"></div>
+                <div class="flex items-center gap-2">
+                    <select id="absTarget" class="p-2 bg-white border border-[#E2E8F0] rounded-lg font-bold outline-none"><option value="parent">إلى ولي الأمر</option><option value="student">إلى الطالب</option></select>
+                    <button onclick="bulkAbsListSend()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i> إرسال جماعي للقائمة</button>
+                </div>
+            </div>
+            <div class="overflow-auto border border-[#E2E8F0] rounded-xl">
+                <table class="w-full text-right"><thead class="bg-[#F1F5F9] text-[#64748B] font-bold sticky top-0"><tr><th class="p-2.5">الطالب</th><th class="p-2.5">الكود (ID)</th><th class="p-2.5">الصف</th><th class="p-2.5">المجموعة</th><th class="p-2.5">عدد مرات الغياب</th><th class="p-2.5">تواريخ الغياب</th><th class="p-2.5 text-center">واتساب</th></tr></thead>
+                <tbody id="absBody" class="divide-y divide-[#E2E8F0]"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div id="lowModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[80] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-3 text-xs max-h-[92vh] flex flex-col">
+            <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 class="font-bold text-[#0F172A] text-sm"><i class="fa-solid fa-arrow-trend-down text-rose-600 ml-1"></i> الطلاب الحاصلون على أقل من نصف درجة الامتحان</h3>
+                <button onclick="closeModal('lowModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                <select id="lowGrade" onchange="fillLowGroups(); renderLowList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select>
+                <select id="lowGroup" onchange="renderLowList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"></select>
+                <select id="lowExam" onchange="renderLowList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"></select>
+                <input id="lowSearch" oninput="renderLowList()" placeholder="ابحث بالاسم أو الكود..." class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none">
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-rose-50 border border-rose-100 rounded-xl p-3">
+                <div class="font-bold text-rose-700" id="lowSummary"></div>
+                <div class="flex items-center gap-2">
+                    <select id="lowTarget" class="p-2 bg-white border border-[#E2E8F0] rounded-lg font-bold outline-none"><option value="parent">إلى ولي الأمر</option><option value="student">إلى الطالب</option></select>
+                    <button onclick="bulkLowListSend()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i> إرسال جماعي للقائمة</button>
+                </div>
+            </div>
+            <div class="overflow-auto border border-[#E2E8F0] rounded-xl">
+                <table class="w-full text-right"><thead class="bg-[#F1F5F9] text-[#64748B] font-bold sticky top-0"><tr><th class="p-2.5">الطالب</th><th class="p-2.5">الكود (ID)</th><th class="p-2.5">الصف</th><th class="p-2.5">المجموعة</th><th class="p-2.5">الامتحان</th><th class="p-2.5">الدرجة</th><th class="p-2.5">النسبة</th><th class="p-2.5 text-center">واتساب</th></tr></thead>
+                <tbody id="lowBody" class="divide-y divide-[#E2E8F0]"></tbody></table>
+            </div>
+        </div>
+    </div>
+
+    <div id="bulkModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[90] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-[#E2E8F0] space-y-4 text-xs">
+            <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 id="bulkTitle" class="font-bold text-[#0F172A] text-sm"></h3>
+                <button onclick="closeModal('bulkModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <p id="bulkInfo" class="font-bold text-[#2563EB]"></p>
+            <div class="w-full bg-slate-100 rounded-full h-2"><div id="bulkBar" class="bg-emerald-600 h-2 rounded-full" style="width:0%"></div></div>
+            <div id="bulkCurrent" class="p-3 bg-[#F1F5F9] rounded-xl border border-[#E2E8F0] text-center"></div>
+            <div class="flex gap-2">
+                <button id="bulkSendBtn" onclick="bulkNext(false)" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl disabled:opacity-40"><i class="fa-brands fa-whatsapp ml-1"></i> فتح واتساب لهذا الرقم</button>
+                <button id="bulkSkipBtn" onclick="bulkNext(true)" class="px-4 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-xl disabled:opacity-40">تخطي</button>
+            </div>
+            <p class="text-[#64748B]">المتصفح يمنع فتح عدة نوافذ واتساب دفعة واحدة، لذلك اضغط الزر لكل ولي أمر بالتتابع: الرسالة تكون جاهزة وأنت تضغط إرسال في واتساب ثم ترجع هنا.</p>
+            <div id="bulkList" class="max-h-40 overflow-y-auto divide-y divide-[#E2E8F0]"></div>
+        </div>
+    </div>
+
+    <div id="classEnd" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[96] w-[92%] max-w-lg bg-rose-50 border border-rose-100 rounded-2xl shadow-2xl p-4 text-xs">
+        <div class="flex items-start gap-3">
+            <i class="fa-solid fa-flag-checkered text-rose-600 text-xl mt-0.5"></i>
+            <div class="flex-1"><p class="font-black text-rose-700 text-sm">انتهت الحصة</p><p id="classEndText" class="font-bold text-[#0F172A] mt-1 leading-relaxed"></p></div>
+            <button onclick="$id('classEnd').classList.add('hidden')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+    </div>
+    <div id="classReminder" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[95] w-[92%] max-w-lg bg-amber-50 border border-amber-100 rounded-2xl shadow-2xl p-4 text-xs">
+        <div class="flex items-start gap-3">
+            <i class="fa-solid fa-bell text-amber-600 text-xl animate-pulse mt-0.5"></i>
+            <div class="flex-1"><p class="font-black text-amber-700 text-sm">تذكير بموعد الحصة</p><p id="classReminderText" class="font-bold text-[#0F172A] mt-1 leading-relaxed"></p></div>
+            <button onclick="$id('classReminder').classList.add('hidden')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
         </div>
     </div>
 
@@ -857,6 +1027,7 @@
             { id: "STU-114", name: "مصعب احمد كريم", grade: "الصف الثالث الثانوي", code: "1014", groupId: "GRP-3", studentPhone: "01055556666", parentPhone: "01050123456" },
             { id: "STU-115", name: "عماد  سعيد علي", grade: "الصف الثالث الثانوي", code: "1015", groupId: "GRP-3", studentPhone: "01055556666", parentPhone: "01050123456" }
         ];
+const LOG_DAYS = 90; // عدد أيام سجل الحضور اللي بيتحمل عند فتح الموقع
 const SUPABASE_URL = "https://ivefopsyojpujcfgktrq.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml2ZWZvcHN5b2pwdWpjZmdrdHJxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTUzNzMsImV4cCI6MjEwODUzMTM3M30.-rRkmjv76IIpMQRpNwmGKczV1N31wkKbY4MkX8ieZPY";
 
@@ -954,12 +1125,17 @@ const supabaseClient = window.supabase.createClient(
         async function loadAllFromCloud() {
             const rows = [];
             const size = 1000;
-            for (let from = 0; ; from += size) {
-                const { data, error } = await supabaseClient.from('records').select('collection,id,data').order('seq', { ascending: true }).range(from, from + size - 1);
-                if (error) throw error;
-                rows.push(...data);
-                if (data.length < size) break;
-            }
+            const cutoff = localDate(new Date(Date.now() - LOG_DAYS * 86400000));
+            const pull = async (apply) => {
+                for (let from = 0; ; from += size) {
+                    const { data, error } = await apply(supabaseClient.from('records').select('collection,id,data')).order('seq', { ascending: true }).range(from, from + size - 1);
+                    if (error) throw error;
+                    rows.push(...data);
+                    if (data.length < size) break;
+                }
+            };
+            await pull(q => q.neq('collection', 'logs'));
+            await pull(q => q.eq('collection', 'logs').gte('data->>date', cutoff));
             const by = {};
             Object.values(COLLECTIONS).forEach(c => by[c] = []);
             rows.forEach(r => {
@@ -1245,6 +1421,7 @@ const supabaseClient = window.supabase.createClient(
             renderPaymentsTable();
             populateAbsenceGroupSelect();
             updateCurrentDayBadge();
+            startBackgroundJobs();
         }
 
         // NAVIGATION TABS
@@ -1287,6 +1464,8 @@ const supabaseClient = window.supabase.createClient(
         }
 
         function updateDashboardCharts() {
+            updateSmartAlerts();
+            renderTodayClasses();
             const today = localDate();
             const todayGroups = populateDashGroupSelect() || [];
             const sel = $id('dashGroupSelect');
@@ -1371,7 +1550,7 @@ const supabaseClient = window.supabase.createClient(
                             </div>
                         </div>
                         <p class="text-xs text-[#64748B]"><i class="fa-solid fa-calendar-days ml-1"></i> الأيام المسموحة: <span class="font-bold text-[#2563EB]">${esc(g.days)}</span></p>
-                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${fmtGroupTime(g.time)}</p>
+                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${fmtGroupRange(g)}</p>
                         <div class="pt-2 border-t border-[#E2E8F0] flex justify-between items-center text-xs">
                             <span class="font-bold text-[#2563EB]">${n} طلاب في المجموعة</span>
                             <button onclick="openGroupStudentsModal('${g.id}')" class="px-3 py-1.5 bg-[#EFF6FF] text-[#2563EB] hover:bg-blue-100 rounded-lg font-bold"><i class="fa-solid fa-users ml-1"></i> عرض الطلاب</button>
@@ -1438,6 +1617,38 @@ const supabaseClient = window.supabase.createClient(
             const m = document.getElementById('gtMin').value;
             document.getElementById('inputGroupTime').value = String(h + (pm ? 12 : 0)).padStart(2, '0') + ':' + m;
         }
+
+        // ===== وقت انتهاء الحصة =====
+        const toMinStr = t => { if (!t) return null; const [h, m] = String(t).split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+        const addMinStr = (t, add) => { let x = (toMinStr(t) ?? 960) + add; x = Math.min(Math.max(x, 0), 23 * 60 + 55); return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+        function initGroupEndPicker() {
+            const h = $id('geHour'), m = $id('geMin');
+            if (!h || h.options.length) return;
+            for (let i = 1; i <= 12; i++) h.add(new Option(String(i), String(i)));
+            for (let i = 0; i < 60; i += 5) m.add(new Option(String(i).padStart(2, '0'), String(i).padStart(2, '0')));
+        }
+        function setGroupEndUI(t) {
+            initGroupEndPicker();
+            const [hh, mm] = String(t || '18:00').split(':').map(Number);
+            const h24 = isNaN(hh) ? 18 : hh, min = isNaN(mm) ? 0 : mm, minStr = String(min).padStart(2, '0'), minSel = $id('geMin');
+            if (![...minSel.options].some(o => o.value === minStr)) {
+                minSel.add(new Option(minStr, minStr));
+                [...minSel.options].sort((a, b) => a.value - b.value).forEach(o => minSel.appendChild(o));
+            }
+            $id('geHour').value = String(((h24 + 11) % 12) + 1);
+            minSel.value = minStr;
+            $id('geAmPm').value = h24 >= 12 ? 'PM' : 'AM';
+            syncGroupEnd();
+        }
+        function syncGroupEnd() {
+            const h = Number($id('geHour').value) % 12, pm = $id('geAmPm').value === 'PM', m = $id('geMin').value;
+            $id('inputGroupEndTime').value = String(h + (pm ? 12 : 0)).padStart(2, '0') + ':' + m;
+        }
+        const endMinOf = g => (g && g.endTime) ? toMinStr(g.endTime) : null;
+        function fmtGroupRange(g) {
+            return g && g.endTime ? `${fmtGroupTime(g.time)} ← ${fmtGroupTime(g.endTime)}`.replace('←', '–') : fmtGroupTime(g && g.time);
+        }
+
         // توحيد كتابة اليوم للمقارنة
         const normDay = d => String(d).trim().replace(/[أإآ]/g, 'ا');
 
@@ -1445,6 +1656,7 @@ const supabaseClient = window.supabase.createClient(
             $id('editGroupId').value = "";
             $id('inputGroupName').value = "";
             setGroupTimeUI("16:00");
+            setGroupEndUI("18:00");
             const f = $id('groupsGradeFilter').value;
             $id('inputGroupGrade').value = f !== 'ALL' ? f : GRADES[0];
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => cb.checked = false);
@@ -1457,6 +1669,7 @@ const supabaseClient = window.supabase.createClient(
             $id('editGroupId').value = g.id;
             $id('inputGroupName').value = g.name;
             setGroupTimeUI(g.time);
+            setGroupEndUI(g.endTime || addMinStr(g.time, 120));
             $id('inputGroupGrade').value = g.grade || GRADES[0];
             const daysArr = g.days.split(',').map(d => d.trim());
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => { cb.checked = daysArr.includes(cb.value); });
@@ -1472,6 +1685,8 @@ const supabaseClient = window.supabase.createClient(
             const selectedDays = Array.from(document.querySelectorAll('#groupDaysCheckboxGroup input:checked')).map(cb => cb.value);
             if (selectedDays.length === 0) { showToast("يرجى تحديد يوم واحد على الأقل للمجموعة", "error"); return; }
             const daysString = selectedDays.join(', ');
+            const endTime = $id('inputGroupEndTime').value.trim();
+            if (toMinStr(endTime) === null || toMinStr(endTime) <= toMinStr(time)) { showToast('وقت انتهاء الحصة لازم يكون بعد وقت البداية', 'error'); return; }
 
             // منع تعارض مجموعتين في نفس اليوم ونفس الموعد
             const padT = t => { const [a, b] = String(t || '').split(':'); return String(Number(a)).padStart(2, '0') + ':' + String(Number(b) || 0).padStart(2, '0'); };
@@ -1495,10 +1710,10 @@ const supabaseClient = window.supabase.createClient(
                         students.forEach(s => { if (s.groupId === id) s.grade = grade; });
                         localStorage.setItem('sys_students', JSON.stringify(students));
                     }
-                    Object.assign(g, { name, days: daysString, time, grade });
+                    Object.assign(g, { name, days: daysString, time, endTime, grade });
                 }
             } else {
-                groups.push({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time });
+                groups.push({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time, endTime });
             }
             localStorage.setItem('sys_groups', JSON.stringify(groups));
             closeModal('groupModal');
@@ -1546,7 +1761,7 @@ const supabaseClient = window.supabase.createClient(
             const q = $id('groupStudentsSearch').value.toLowerCase().trim();
             const list = all.filter(s => s.name.toLowerCase().includes(q) || String(s.code).toLowerCase().includes(q));
             $id('gsmTitle').textContent = g.name;
-            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${fmtGroupTime(g.time)}`;
+            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${fmtGroupRange(g)}`;
             $id('gsmCount').textContent = all.length;
             $id('gsmBody').innerHTML = list.length ? list.map((s, i) => {
                 const abs = logs.filter(l => l.studentId === s.id && l.status === 'ABSENT').length;
@@ -1652,7 +1867,7 @@ const supabaseClient = window.supabase.createClient(
 
             const allowedDays = autoGroup.days.split(',').map(d => d.trim());
 
-            if (!allowedDays.includes(currentArabicDay)) {
+            if (!allowedDays.includes(currentArabicDay) && !($id('scanOverride') && $id('scanOverride').checked)) {
                 playStatusSound('ERROR');
                 const box = document.getElementById('scanResultBox');
                 box.innerHTML = `
@@ -1666,6 +1881,24 @@ const supabaseClient = window.supabase.createClient(
                 showToast(`عفواً! اليوم ليس موعد مجموعة ${student.name}`, "error");
                 return;
             }
+            // بعد مرور 15 دقيقة على موعد الحصة: ممنوع التسجيل بالـQR — الطالب غائب ويتغير يدوياً فقط
+            if (!($id('scanOverride') && $id('scanOverride').checked)) {
+                const [gh, gm] = String(autoGroup.time || '').split(':').map(Number);
+                const nd = new Date();
+                if (!isNaN(gh) && nd.getHours() * 60 + nd.getMinutes() >= gh * 60 + (gm || 0) + 15) {
+                    playStatusSound('ERROR');
+                    document.getElementById('scanResultBox').innerHTML = `
+                        <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-clock"></i></div>
+                        <h3 class="font-bold text-rose-600 text-base">انتهى وقت تسجيل الحضور!</h3>
+                        <p class="text-xs font-bold text-[#0F172A] mt-1">${esc(student.name)} (ID: ${esc(student.code)})</p>
+                        <p class="text-xs text-[#64748B] mt-1">مرت 15 دقيقة على موعد ${esc(autoGroup.name)} (${fmtGroupTime(autoGroup.time)}) — الطالب مسجّل غائب.</p>
+                        <p class="text-xs text-rose-600 font-bold mt-1">لتغيير حالته: سجل الحضور ← تعديل الحالة</p>`;
+                    showToast(`انتهى وقت الحضور — ${student.name} غائب، عدّل حالته يدوياً`, 'error');
+                    runAutoAbsence(true, autoGroup.id);
+                    return;
+                }
+            }
+
 
             const today = localDate();
             const timeNow = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
@@ -1789,8 +2022,7 @@ const supabaseClient = window.supabase.createClient(
             if (preset && preset.grade) $id('inputStudentGrade').value = preset.grade;
             populateGroupSelects(preset && preset.groupId);
             // اقتراح كود جديد غير مكرر (أكبر كود رقمي + 1)
-            const nums = students.map(x => parseInt(x.code, 10)).filter(n => !isNaN(n));
-            if (nums.length) $id('inputStudentCode').value = String(Math.max(...nums) + 1);
+            { const used = new Set(students.map(x => String(x.code))); let c; do { c = String(100000 + Math.floor(Math.random() * 900000)); } while (used.has(c)); $id('inputStudentCode').value = c; }
             $id('studentModal').classList.remove('hidden');
         }
 
@@ -1808,7 +2040,7 @@ const supabaseClient = window.supabase.createClient(
             $id('studentModal').classList.remove('hidden');
         }
 
-        function saveStudent(e) {
+        async function saveStudent(e) {
             e.preventDefault();
             const editId = document.getElementById('editStudentId').value;
             const name = document.getElementById('inputStudentName').value.trim();
@@ -1826,6 +2058,12 @@ const supabaseClient = window.supabase.createClient(
                 if (typeof playStatusSound === 'function') playStatusSound('ERROR');
                 return;
             }
+
+            try {
+                const { data: cd } = await supabaseClient.from('records').select('id,data').eq('collection', 'students').eq('data->>code', code);
+                const other = (cd || []).find(r => r.id !== editId);
+                if (other) { showToast(`الكود ${code} مستخدم بالفعل على جهاز آخر للطالب: ${other.data.name}`, "error"); return; }
+            } catch (err) { console.error(err); }
 
             if (editId) {
                 const s = students.find(x => x.id === editId);
@@ -2180,61 +2418,71 @@ const supabaseClient = window.supabase.createClient(
             if (todayGroups.some(g => g.id === prev)) sel.value = prev;
         }
 
-        function checkAndMarkAutoAbsence() {
-            const selectedGroupId = $id('absenceGroupSelect') ? $id('absenceGroupSelect').value : '';
-            if (!selectedGroupId) { showToast('اختر المجموعة أولاً لفحص غيابها', 'error'); return; }
-            const today = localDate();
-            const currentArabicDay = getCurrentArabicDayName();
-            const now = new Date();
-            const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-            let newlyAbsentedCount = 0;
-
-            groups.forEach(group => {
-                if (group.id !== selectedGroupId) return; // الغياب للمجموعة المختارة فقط
-                const allowedDays = group.days.split(',').map(d => d.trim());
-                if (!allowedDays.includes(currentArabicDay)) return;
-
-                let groupStartMinutes = 0;
-                if (group.time.includes(':')) {
-                    const [h, m] = group.time.split(':').map(Number);
-                    groupStartMinutes = h * 60 + m;
-                }
-
-                // فحص ما إذا كانت قد مرت 15 دقيقة على موعد الحصة
-                if (currentMinutes >= groupStartMinutes + 15) {
-                    students.filter(s => s.groupId === group.id).forEach(s => {
-                        const existingLog = logs.find(l => l.studentId === s.id && l.date === today);
-                        if (!existingLog) {
-                            logs.unshift({
-                                id: 'LOG-' + s.id + '-' + today,
-                                studentId: s.id,
-                                studentName: s.name,
-                                studentCode: s.code,
-                                groupId: group.id,
-                                date: today,
-                                time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' }),
-                                ts: new Date().toISOString(),
-                                status: 'ABSENT'
-                            });
-                            newlyAbsentedCount++;
-                        }
-                    });
-                }
+        const canonObj = o => JSON.stringify(Object.keys(o).sort().map(k => [k, o[k]]));
+        async function refreshTodayLogs() {
+            if (!cloudReady || pendingSyncs > 0) return;
+            const { data, error } = await supabaseClient.from('records').select('id,data').eq('collection', 'logs').eq('data->>date', localDate());
+            if (error || !data) return;
+            const m = synced['logs'] || new Map();
+            let changed = false;
+            data.forEach(r => {
+                const i = logs.findIndex(l => l.id === r.id);
+                if (i > -1 && canonObj(logs[i]) === canonObj(r.data)) return;
+                if (i > -1) logs[i] = r.data; else logs.unshift(r.data);
+                m.set(r.id, JSON.stringify(r.data)); changed = true;
             });
-
-            if (newlyAbsentedCount > 0) {
-                localStorage.setItem('sys_logs', JSON.stringify(logs));
-                playStatusSound('ERROR');
-                // ملحوظة: المتصفح بيمنع فتح عشرات نوافذ واتساب مرة واحدة، فالإرسال بيتم من زر "إشعار ولي الأمر" في كل صف
-                showToast(`تم تحويل ${newlyAbsentedCount} طالب لـ "غائب" لمرور15 دقيقة — أرسل الإشعارات من زر "إشعار ولي الأمر" في السجل`, "error");
-                renderLogsTable();
-                updateDashboardCharts();
-                renderStudentsTable();
-            } else {
-                showToast("لا يوجد غائب جديد في هذه المجموعة (أو لم تمر 15 دقيقة على موعدها)", "info");
-            }
+            synced['logs'] = m;
+            if (changed) { renderLogsTable(); updateDashboardCharts(); renderStudentsTable(); }
         }
+
+        // الغياب التلقائي: يعمل لوحده كل 30 ثانية لكل مجموعات اليوم، بعد 15 دقيقة من موعد الحصة
+        async function runAutoAbsence(silent, onlyGroupId) {
+            if (!cloudReady || window._absBusy) return 0;
+            window._absBusy = true;
+            let n = 0;
+            try {
+                await refreshTodayLogs();
+                const today = localDate(), day = normDay(getCurrentArabicDayName());
+                const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+                const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                const seen = new Set(logs.filter(l => l.date === today).map(l => l.studentId));
+                groups.forEach(g => {
+                    if (onlyGroupId && g.id !== onlyGroupId) return;
+                    if (!String(g.days || '').split(/[,،]/).map(normDay).includes(day)) return;
+                    const [h, m] = String(g.time || '').split(':').map(Number);
+                    if (isNaN(h) || nowMin < h * 60 + (m || 0) + 15) return;
+                    students.filter(s => s.groupId === g.id && !seen.has(s.id)).forEach(s => {
+                        logs.unshift({ id: 'LOG-' + s.id + '-' + today, studentId: s.id, studentName: s.name, studentCode: s.code, groupId: g.id, date: today, time: timeStr, ts: now.toISOString(), status: 'ABSENT' });
+                        seen.add(s.id); n++;
+                    });
+                });
+                if (n) {
+                    localStorage.setItem('sys_logs', JSON.stringify(logs));
+                    playStatusSound('ERROR');
+                    renderLogsTable(); updateDashboardCharts(); renderStudentsTable();
+                }
+            } finally { window._absBusy = false; }
+            if (n) showToast(`تم تسجيل ${n} طالب غائب تلقائياً (مرور 15 دقيقة على الموعد)`, 'error');
+            else if (!silent) showToast('لا يوجد غائب جديد (أو لم تمر 15 دقيقة على الموعد)', 'info');
+            return n;
+        }
+        function checkAndMarkAutoAbsence() {
+            const sel = $id('absenceGroupSelect');
+            if (!sel || !sel.value) { showToast('اختر المجموعة أولاً لفحص غيابها', 'error'); return; }
+            runAutoAbsence(false, sel.value);
+        }
+        function startBackgroundJobs() {
+            const last = Number(localStorage.getItem('last_export') || 0);
+            if (Date.now() - last > 7 * 86400000) showToast('مر أكثر من أسبوع على آخر نسخة احتياطية — اضغط "تصدير كل البيانات"', 'info');
+            if (window._bgStarted) return;
+            window._bgStarted = true;
+            setInterval(() => runAutoAbsence(true), 30000);
+            setInterval(refreshTodayLogs, 20000);
+            setInterval(() => { renderTodayClasses(); checkClassReminders(); }, 30000);
+            setInterval(checkClassReminders, 10000);
+            setTimeout(() => { renderTodayClasses(); checkClassReminders(); updateNotifBtn(); runAutoAbsence(true); }, 2500);
+        }
+
 
         // LOGS & WHATSAPP
         const MAX_LOG_ROWS = 500;
@@ -2356,7 +2604,7 @@ const supabaseClient = window.supabase.createClient(
                     rank: mine ? 1 + peers.filter(x => x > mine.score).length : null, of: peers.length };
             });
             const scored = examRows.filter(r => r.pct !== null);
-            const pays = paymentPlans.filter(p => p.groupId === s.groupId).map(p => {
+            const pays = paymentPlans.filter(p => planApplies(p, s)).map(p => {
                 const r = getPaymentRecord(p.id, s.id), amt = Number(p.amount), pa = paidAmountOf(p, r);
                 return { name: p.name, amount: amt, due: p.dueDate, paidAmt: pa, paid: amt > 0 && pa >= amt, paidDate: r && r.paidDate };
             });
@@ -2498,9 +2746,11 @@ const supabaseClient = window.supabase.createClient(
             sel.innerHTML = available.length
                 ? available.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${fmtGroupTime(g.time)}</option>`).join('')
                 : '<option value="">لا توجد مجموعات في هذا الصف</option>';
-            if (available.some(g => g.id === prev)) sel.value = prev;
+            sel.insertAdjacentHTML('afterbegin', '<option value="ALL">★ كل مجموعات الصف (الصف بالكامل)</option>');
+            sel.value = (prev === 'ALL' || available.some(g => g.id === prev)) ? prev : (available.length ? available[0].id : 'ALL');
             renderPaymentGroupSchedule();
         }
+        const planApplies = (p, st) => p.groupId === 'ALL' ? gradeOf(st) === p.grade : st.groupId === p.groupId;
         function fmtGroupTime(t) {
             if (!t) return '--';
             const [h, m] = t.split(':').map(Number);
@@ -2512,7 +2762,7 @@ const supabaseClient = window.supabase.createClient(
             if (!box || !sel) return;
             const g = groups.find(x => x.id === sel.value);
             if (!g) { box.classList.add('hidden'); return; }
-            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${fmtGroupTime(g.time)}`;
+            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${fmtGroupRange(g)}`;
             box.classList.remove('hidden');
         }
         document.addEventListener('change', function(e) {
@@ -2550,7 +2800,7 @@ const supabaseClient = window.supabase.createClient(
             sel.innerHTML = paymentPlans.length
                 ? paymentPlans.slice().reverse().map(p => {
                     const g = groups.find(x => x.id === p.groupId);
-                    return `<option value="${p.id}">${esc(p.name)} — ${esc(p.amount)} جنيه — ${esc(p.grade)} — ${g ? esc(g.name + ' (' + (g.days || '') + ' ' + fmtGroupTime(g.time) + ')') : 'مجموعة محذوفة'}</option>`;
+                    return `<option value="${p.id}">${esc(p.name)} — ${esc(p.amount)} جنيه — ${esc(p.grade)} — ${g ? esc(g.name + ' (' + (g.days || '') + ' ' + fmtGroupTime(g.time) + ')') : (p.groupId === 'ALL' ? 'كل مجموعات الصف' : 'مجموعة محذوفة')}</option>`;
                 }).join('')
                 : '<option value="">لا توجد مستحقات بعد — أنشئ مستحقًا أولًا</option>';
             if (paymentPlans.some(p => p.id === previous)) sel.value = previous;
@@ -2641,7 +2891,7 @@ const supabaseClient = window.supabase.createClient(
             }
             const amount = Number(plan.amount);
             const search = ($id('paymentStudentSearch')?.value || '').trim().toLowerCase();
-            const groupAll = students.filter(st => st.groupId === plan.groupId);
+            const groupAll = students.filter(st => planApplies(plan, st));
             const view = groupAll.filter(st => st.name.toLowerCase().includes(search) || String(st.code).toLowerCase().includes(search));
             const paidOf = st => paidAmountOf(plan, getPaymentRecord(plan.id, st.id));
             const full = groupAll.filter(st => amount > 0 && paidOf(st) >= amount).length;
@@ -2670,7 +2920,7 @@ const supabaseClient = window.supabase.createClient(
                     <td class="p-3">${paidAmt > 0 ? esc(rec.paidDate || '--') + ` <button onclick="editPaymentDate('${plan.id}','${st.id}')" class="text-blue-600 mr-1" title="تعديل تاريخ السداد"><i class="fa-solid fa-pen"></i></button>` : '--'}</td>
                     <td class="p-3 whitespace-nowrap">
                         ${rem > 0 ? `<button onclick="payFull('${plan.id}','${st.id}')" class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold ml-1">سداد كامل</button>` : ''}
-                        <button onclick="sendPaymentWhatsApp('${st.id}','${plan.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"><i class="fa-brands fa-whatsapp ml-1"></i>واتساب</button>
+                        ${paidAmt > 0 ? `<button onclick="sendPaymentReceipt('${plan.id}','${st.id}','parent')" title="إرسال إيصال سداد لولي الأمر" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1"><i class="fa-solid fa-receipt ml-1"></i>إيصال لولي الأمر</button><button onclick="sendPaymentReceipt('${plan.id}','${st.id}','student')" title="إرسال إيصال سداد للطالب" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1">إيصال للطالب</button>` : ''}<button onclick="sendPaymentWhatsApp('${st.id}','${plan.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"><i class="fa-brands fa-whatsapp ml-1"></i>واتساب</button>
                     </td>
                 </tr>`;
             }).join('') || '<tr><td colspan="10" class="p-6 text-center text-slate-500">لا يوجد طلاب مطابقون في المجموعة المحددة.</td></tr>';
@@ -2702,7 +2952,7 @@ const supabaseClient = window.supabase.createClient(
                         return max > 0 ? (Number(g.score) / max) * 100 : null;
                     }).filter(v => v !== null && !isNaN(v));
                     const avgExam = myGrades.length ? Math.round(myGrades.reduce((a, b) => a + b, 0) / myGrades.length) : null;
-                    const myPlans = paymentPlans.filter(pl => pl.groupId === s.groupId);
+                    const myPlans = paymentPlans.filter(pl => planApplies(pl, s));
                     const required = myPlans.reduce((sum, pl) => sum + Number(pl.amount || 0), 0);
                     const paid = myPlans.reduce((sum, pl) => sum + paidAmountOf(pl, studentPayments.find(x => x.planId === pl.id && x.studentId === s.id)), 0);
                     return {
@@ -2793,7 +3043,7 @@ const supabaseClient = window.supabase.createClient(
                 // 7) المدفوعات: صف لكل طالب في كل مستحق (يشمل اللي لم يدفع)
                 const paymentsData = [];
                 paymentPlans.forEach(plan => {
-                    students.filter(s => s.groupId === plan.groupId).forEach(st => {
+                    students.filter(s => planApplies(plan, s)).forEach(st => {
                         const rec = studentPayments.find(x => x.planId === plan.id && x.studentId === st.id);
                         const paid = paidAmountOf(plan, rec);
                         const amount = Number(plan.amount || 0);
@@ -2803,7 +3053,7 @@ const supabaseClient = window.supabase.createClient(
                             "اسم الطالب": st.name,
                             "الكود": st.code,
                             "الصف": plan.grade || gradeOfStudent(st),
-                            "المجموعة": groupName(plan.groupId),
+                            "المجموعة": (plan.groupId === 'ALL' ? 'كل مجموعات الصف' : groupName(plan.groupId)),
                             "المبلغ المدفوع": paid,
                             "المتبقي": Math.max(0, amount - paid),
                             "حالة السداد": (paid >= amount && amount > 0) ? "دفع كامل" : (paid > 0 ? "دفع جزئي" : "لم يدفع"),
@@ -2815,6 +3065,7 @@ const supabaseClient = window.supabase.createClient(
                 addSheet(paymentsData, "المدفوعات");
 
                 XLSX.writeFile(wb, `نسخة_كاملة_نظام_الحضور_${localDate()}.xlsx`);
+                try { localStorage.setItem('last_export', String(Date.now())); } catch (e) {}
                 showToast("تم تصدير كل البيانات في ملف Excel", "success");
             } catch (err) {
                 console.error(err);
@@ -2828,6 +3079,7 @@ const supabaseClient = window.supabase.createClient(
             if (!s) return;
             const grp = groups.find(g => g.id === s.groupId);
 
+            window._cardStu = s.id;
             document.getElementById('cardStudentName').textContent = s.name;
             document.getElementById('cardStudentGrade').textContent = s.grade || 'الصف الأول الثانوي';
             document.getElementById('cardStudentGroup').textContent = grp ? grp.name : '--';
@@ -2837,6 +3089,280 @@ const supabaseClient = window.supabase.createClient(
             qrContainer.innerHTML = '';
             new QRCode(qrContainer, { text: s.code, width: 120, height: 120 });
             document.getElementById('barcodeCardModal').classList.remove('hidden');
+        }
+
+        const LOGO_DATA = "data:image/png;base64,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";
+        document.querySelectorAll('.app-logo').forEach(i => { i.src = LOGO_DATA; });
+        const LOGO_IMG = new Image(); LOGO_IMG.src = LOGO_DATA;
+        
+
+        // ===== إرسال واتساب جماعي (بالتتابع) =====
+        let bulkQ = { items: [], i: 0 };
+        function startBulk(title, items) {
+            items = items.filter(x => x.phone);
+            if (!items.length) { showToast('لا يوجد أحد لإرسال رسالة له (أو أرقام أولياء الأمور غير متاحة)', 'info'); return; }
+            bulkQ = { items, i: 0 };
+            $id('bulkTitle').textContent = title;
+            renderBulk();
+            $id('bulkModal').classList.remove('hidden');
+        }
+        function renderBulk() {
+            const { items, i } = bulkQ, done = i >= items.length;
+            $id('bulkBar').style.width = Math.round(i / items.length * 100) + '%';
+            $id('bulkInfo').textContent = done ? `تم الانتهاء من ${items.length} رسالة ✅` : `الرسالة ${i + 1} من ${items.length}`;
+            $id('bulkCurrent').innerHTML = done ? '✅ اكتملت القائمة' : `<b class="text-sm">${esc(items[i].name)}</b><br><span dir="ltr" class="font-mono text-[#64748B]">${esc(items[i].raw)}</span>`;
+            $id('bulkSendBtn').disabled = $id('bulkSkipBtn').disabled = done;
+            $id('bulkList').innerHTML = items.map((x, k) => `<div class="flex justify-between py-1.5 ${k < i ? 'text-emerald-700' : ''}"><span>${esc(x.name)}</span><span>${k < i ? (x.skipped ? 'تم التخطي' : '✅') : ''}</span></div>`).join('');
+        }
+        function bulkNext(skip) {
+            const it = bulkQ.items[bulkQ.i];
+            if (!it) return;
+            if (skip) it.skipped = true; else window.open('https://wa.me/' + it.phone + '?text=' + encodeURIComponent(it.msg), '_blank');
+            bulkQ.i++;
+            renderBulk();
+        }
+        function paymentMsg(st, plan) {
+            const paid = paidAmountOf(plan, getPaymentRecord(plan.id, st.id)), rem = Math.max(0, Number(plan.amount) - paid), g = groups.find(x => x.id === st.groupId);
+            return { rem, msg: `السلام عليكم ورحمة الله وبركاته 🌷\nولي أمر الطالب/ة: *${st.name}*\n🏫 *الصف:* ${gradeOf(st)}\n👥 *المجموعة:* ${g ? g.name : '--'}\n💳 *المستحق:* ${plan.name}\n💰 *المطلوب:* ${plan.amount} جنيه\n✅ *المدفوع:* ${paid} جنيه\n🔻 *المتبقي:* ${rem} جنيه${plan.dueDate ? '\n📅 *تاريخ الاستحقاق:* ' + plan.dueDate : ''}\n\nنرجو التكرم بسداد المتبقي، وشكراً لتعاونكم 🌟` };
+        }
+        
+        const absMsg = (s, lines) => `السلام عليكم ورحمة الله وبركاته 🌺\nولي أمر الطالب/ة: *${s.name}*\nالصف: *${gradeOf(s)}*\n\n${lines}\n\nيرجى المتابعة والاطمئنان، وشكراً لتعاونكم 🌟`;
+        function bulkAbsenceToday() {
+            const date = ($id('logDateFilter') && $id('logDateFilter').value) || localDate();
+            const seen = new Set(), items = [];
+            logs.filter(l => l.date === date && l.status === 'ABSENT').forEach(l => {
+                const s = students.find(x => x.id === l.studentId);
+                if (!s || seen.has(s.id)) return; seen.add(s.id);
+                items.push({ name: s.name, raw: s.parentPhone || s.phone, phone: formatWaPhone(s.parentPhone || s.phone), msg: absMsg(s, `📌 تنبيه: لم يحضر الطالب/ة حصة يوم *${date}* ❌`) });
+            });
+            startBulk('تقرير الغياب الجماعي — ' + date, items);
+        }
+        // ===== التنبيهات الذكية =====
+        const ABS_ALERT_MIN = 3;
+        function frequentAbsentees() {
+            const m = localDate().slice(0, 7), by = {};
+            logs.forEach(l => { if (l.status === 'ABSENT' && String(l.date).startsWith(m)) (by[l.studentId] = by[l.studentId] || []).push(l.date); });
+            return Object.keys(by).filter(id => by[id].length >= ABS_ALERT_MIN).map(id => ({ s: students.find(x => x.id === id), dates: by[id].sort() })).filter(x => x.s);
+        }
+        function updateSmartAlerts() {
+            const box = $id('smartAlert'); if (!box) return;
+            const list = frequentAbsentees();
+            box.classList.toggle('hidden', !list.length);
+            if (list.length) $id('smartAlertText').textContent = `تنبيه: يوجد ${list.length} طالب غابوا ${ABS_ALERT_MIN} مرات أو أكثر هذا الشهر — هل تريد إرسال تنبيه جماعي لأولياء أمورهم؟`;
+        }
+        function bulkAbsenceAlert() {
+            startBulk('تنبيه جماعي: كثرة الغياب هذا الشهر', frequentAbsentees().map(({ s, dates }) => ({ name: s.name, raw: s.parentPhone || s.phone, phone: formatWaPhone(s.parentPhone || s.phone),
+                msg: absMsg(s, `⚠️ تنبيه: غاب الطالب/ة *${dates.length}* مرات هذا الشهر (${dates.join('، ')}). نرجو التواصل لمتابعة الحضور.`) })));
+        }
+
+
+        // ===== الطلاب الغايبين أكتر من مرتين (سجل الحضور) =====
+        const ABS_LIST_MIN = 3;   // أكثر من مرتين = 3 مرات فأكثر
+        function openAbsModal() { $id('absGrade').value = 'ALL'; $id('absPeriod').value = 'ALL'; $id('absSearch').value = ''; fillAbsGroups(); renderAbsList(); $id('absModal').classList.remove('hidden'); }
+        function fillAbsGroups() {
+            $id('absGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('absGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+        }
+        function absListRows() {
+            const gr = $id('absGrade').value, gp = $id('absGroup').value, per = $id('absPeriod').value, q = $id('absSearch').value.toLowerCase().trim();
+            const month = localDate().slice(0, 7), by = {};
+            logs.forEach(l => {
+                if (l.status !== 'ABSENT') return;
+                if (per === 'MONTH' && !String(l.date).startsWith(month)) return;
+                (by[l.studentId] = by[l.studentId] || new Set()).add(l.date);
+            });
+            const stuMap = new Map(students.map(s => [s.id, s]));
+            return Object.keys(by).map(id => ({ st: stuMap.get(id), dates: [...by[id]].sort() }))
+                .filter(r => r.st && r.dates.length >= ABS_LIST_MIN)
+                .filter(r => gr === 'ALL' || gradeOf(r.st) === gr)
+                .filter(r => gp === 'ALL' || r.st.groupId === gp)
+                .filter(r => !q || r.st.name.toLowerCase().includes(q) || String(r.st.code).toLowerCase().includes(q))
+                .sort((a, b) => b.dates.length - a.dates.length || a.st.name.localeCompare(b.st.name, 'ar'));
+        }
+        function absListMsg(r, who) {
+            const per = $id('absPeriod').value === 'MONTH' ? ' هذا الشهر' : '';
+            const m = absMsg(r.st, `⚠️ تنبيه: غاب الطالب/ة *${r.dates.length}* مرات${per} (${r.dates.join('، ')}). نرجو التواصل لمتابعة الحضور.`);
+            return who === 'student' ? m.replace('ولي أمر الطالب/ة:', 'الطالب/ة:') : m;
+        }
+        function renderAbsList() {
+            const rows = window._absRows = absListRows();
+            $id('absSummary').textContent = `${rows.length} طالب غابوا ${ABS_LIST_MIN} مرات أو أكثر`;
+            $id('absBody').innerHTML = rows.length ? rows.map((r, i) => {
+                const g = groups.find(x => x.id === r.st.groupId);
+                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5"><span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">${r.dates.length}</span></td><td class="p-2.5 font-mono text-[#64748B]">${r.dates.map(esc).join('، ')}</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendAbsListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
+            }).join('') : '<tr><td colspan="7" class="p-6 text-center text-[#64748B]">لا يوجد طلاب غابوا أكثر من مرتين 🎉</td></tr>';
+        }
+        function sendAbsListOne(i) {
+            const r = (window._absRows || [])[i]; if (!r) return;
+            const who = $id('absTarget').value, phone = formatWaPhone(phoneFor(r.st, who));
+            if (!phone) { showToast('الرقم غير متاح', 'error'); return; }
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(absListMsg(r, who)), '_blank');
+        }
+        function bulkAbsListSend() {
+            const who = $id('absTarget').value;
+            startBulk('تنبيه جماعي: الغياب أكثر من مرتين', (window._absRows || []).map(r => ({ name: r.st.name, raw: phoneFor(r.st, who), phone: formatWaPhone(phoneFor(r.st, who)), msg: absListMsg(r, who) })));
+        }
+
+        // ===== الطلاب اللي درجتهم أقل من نص درجة الامتحان (كل الصفوف والمجموعات) =====
+        function openLowModal() {
+            $id('lowGrade').value = 'ALL'; $id('lowSearch').value = '';
+            $id('lowExam').innerHTML = '<option value="ALL">كل الامتحانات</option>' + exams.map(e => `<option value="${e.id}">${esc(e.title)} (${esc(e.maxGrade)} د)</option>`).join('');
+            fillLowGroups(); renderLowList(); $id('lowModal').classList.remove('hidden');
+        }
+        function fillLowGroups() {
+            $id('lowGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('lowGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+        }
+        function lowListRows() {
+            const gr = $id('lowGrade').value, gp = $id('lowGroup').value, exId = $id('lowExam').value, q = $id('lowSearch').value.toLowerCase().trim();
+            const stuMap = new Map(students.map(s => [s.id, s])), exMap = new Map(exams.map(e => [e.id, e])), rows = [];
+            examGrades.forEach(g => {
+                const ex = exMap.get(g.examId), st = stuMap.get(g.studentId);
+                if (!ex || !st) return;
+                const max = Number(ex.maxGrade), score = Number(g.score);
+                if (!(max > 0) || !Number.isFinite(score) || score >= max / 2) return;
+                if (exId !== 'ALL' && ex.id !== exId) return;
+                if (gr !== 'ALL' && gradeOf(st) !== gr) return;
+                if (gp !== 'ALL' && st.groupId !== gp) return;
+                if (q && !(st.name.toLowerCase().includes(q) || String(st.code).toLowerCase().includes(q))) return;
+                rows.push({ st, ex, score, max, pct: Math.round(score / max * 100) });
+            });
+            return rows.sort((a, b) => a.pct - b.pct || a.st.name.localeCompare(b.st.name, 'ar'));
+        }
+        function lowListMsg(st, items, who) {
+            const lines = items.map(r => `📝 *${r.ex.title}:* ${r.score} من ${r.max} (${r.pct}%)`).join('\n');
+            const m = `السلام عليكم ورحمة الله وبركاته 🌺\nولي أمر الطالب/ة: *${st.name}*\nالصف الدراسي: *${gradeOf(st)}*\n\n⚠️ حصل الطالب/ة على أقل من نصف الدرجة في:\n${lines}\n\nنرجو المتابعة والاهتمام بالمذاكرة، وشكراً لتعاونكم 🌟`;
+            return who === 'student' ? m.replace('ولي أمر الطالب/ة:', 'الطالب/ة:') : m;
+        }
+        function renderLowList() {
+            const rows = window._lowRows = lowListRows();
+            $id('lowSummary').textContent = `${new Set(rows.map(r => r.st.id)).size} طالب — ${rows.length} درجة أقل من النصف`;
+            $id('lowBody').innerHTML = rows.length ? rows.map((r, i) => {
+                const g = groups.find(x => x.id === r.st.groupId);
+                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5">${esc(r.ex.title)}</td><td class="p-2.5 font-mono font-bold">${r.score} / ${r.max}</td><td class="p-2.5 font-bold text-rose-600">${r.pct}%</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendLowListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
+            }).join('') : '<tr><td colspan="8" class="p-6 text-center text-[#64748B]">لا يوجد طلاب أقل من نصف الدرجة 🎉</td></tr>';
+        }
+        function sendLowListOne(i) {
+            const r = (window._lowRows || [])[i]; if (!r) return;
+            const who = $id('lowTarget').value, phone = formatWaPhone(phoneFor(r.st, who));
+            if (!phone) { showToast('الرقم غير متاح', 'error'); return; }
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(lowListMsg(r.st, [r], who)), '_blank');
+        }
+        function bulkLowListSend() {
+            const who = $id('lowTarget').value, by = new Map();
+            (window._lowRows || []).forEach(r => { if (!by.has(r.st.id)) by.set(r.st.id, { st: r.st, items: [] }); by.get(r.st.id).items.push(r); });
+            startBulk('تنبيه جماعي: أقل من نصف الدرجة', [...by.values()].map(({ st, items }) => ({ name: st.name, raw: phoneFor(st, who), phone: formatWaPhone(phoneFor(st, who)), msg: lowListMsg(st, items, who) })));
+        }
+
+        // ===== المتخلفون عن الدفع + إيصال السداد =====
+        function openUnpaidModal() { $id('unpGrade').value = 'ALL'; $id('unpSearch').value = ''; fillUnpGroups(); renderUnpaid(); $id('unpaidModal').classList.remove('hidden'); }
+        function fillUnpGroups() {
+            $id('unpGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('unpGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+        }
+        function unpaidRows() {
+            const gr = $id('unpGrade').value, gp = $id('unpGroup').value, q = $id('unpSearch').value.toLowerCase().trim(), rows = [];
+            paymentPlans.forEach(plan => students.forEach(st => {
+                if (!planApplies(plan, st)) return;
+                if (gr !== 'ALL' && gradeOf(st) !== gr) return;
+                if (gp !== 'ALL' && st.groupId !== gp) return;
+                if (q && !(st.name.toLowerCase().includes(q) || String(st.code).toLowerCase().includes(q))) return;
+                const paid = paidAmountOf(plan, getPaymentRecord(plan.id, st.id)), rem = Math.max(0, Number(plan.amount) - paid);
+                if (rem > 0) rows.push({ st, plan, paid, rem });
+            }));
+            return rows.sort((a, b) => a.st.name.localeCompare(b.st.name, 'ar'));
+        }
+        function renderUnpaid() {
+            const rows = unpaidRows(), fmt = n => Number(n).toLocaleString('ar-EG');
+            $id('unpSummary').textContent = `${new Set(rows.map(r => r.st.id)).size} طالب — ${rows.length} مستحق — إجمالي المتبقي ${fmt(rows.reduce((a, r) => a + r.rem, 0))} جنيه`;
+            $id('unpBody').innerHTML = rows.length ? rows.map(({ st, plan, paid, rem }) => {
+                const g = groups.find(x => x.id === st.groupId);
+                return `<tr><td class="p-2.5 font-bold">${esc(st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(st.code)}</td><td class="p-2.5">${esc(gradeOf(st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5">${esc(plan.name)}</td><td class="p-2.5">${fmt(plan.amount)}</td><td class="p-2.5">${fmt(paid)}</td><td class="p-2.5 font-black text-rose-600">${fmt(rem)} جنيه</td><td class="p-2.5">${esc(plan.dueDate || '--')}</td>
+                    <td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','parent')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg ml-1"><i class="fa-brands fa-whatsapp ml-1"></i>ولي الأمر</button><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','student')" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>الطالب</button></td></tr>`;
+            }).join('') : '<tr><td colspan="10" class="p-6 text-center text-[#64748B]">لا يوجد متخلفون عن الدفع 🎉</td></tr>';
+        }
+        const phoneFor = (st, who) => who === 'student' ? (st.studentPhone || st.phone) : (st.parentPhone || st.phone);
+        const unpMsg = (st, plan, who) => { const m = paymentMsg(st, plan).msg; return who === 'student' ? m.replace('ولي أمر الطالب/ة:', 'الطالب/ة:') : m; };
+        function sendUnpaidMsg(planId, stId, who) {
+            const st = students.find(s => s.id === stId), plan = paymentPlans.find(p => p.id === planId);
+            if (!st || !plan) return;
+            const phone = formatWaPhone(phoneFor(st, who));
+            if (!phone) { showToast('الرقم غير متاح', 'error'); return; }
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(unpMsg(st, plan, who)), '_blank');
+        }
+        function bulkUnpaidFromList() {
+            const who = $id('unpTarget').value;
+            startBulk('إنذار جماعي للمتخلفين عن الدفع', unpaidRows().map(({ st, plan }) => ({ name: st.name + ' (ID: ' + st.code + ') — ' + plan.name, raw: phoneFor(st, who), phone: formatWaPhone(phoneFor(st, who)), msg: unpMsg(st, plan, who) })));
+        }
+        function sendPaymentReceipt(planId, stId, who) {
+            const st = students.find(s => s.id === stId), plan = paymentPlans.find(p => p.id === planId);
+            if (!st || !plan) return;
+            const phone = formatWaPhone(phoneFor(st, who));
+            if (!phone) { showToast('الرقم غير متاح', 'error'); return; }
+            const rec = getPaymentRecord(planId, stId), paid = paidAmountOf(plan, rec), rem = Math.max(0, Number(plan.amount) - paid);
+            const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n${who === 'student' ? 'الطالب/ة' : 'ولي أمر الطالب/ة'}: *${st.name}*\n\n✅ تم استلام دفعة بخصوص: *${plan.name}*\n💰 *المطلوب:* ${plan.amount} جنيه\n✅ *المدفوع:* ${paid} جنيه\n🔻 *المتبقي:* ${rem} جنيه${rec && rec.paidDate ? '\n📅 *تاريخ السداد:* ' + rec.paidDate : ''}\n\n${rem === 0 ? '🎉 تم سداد المبلغ كاملاً، شكراً لكم' : 'نرجو سداد المتبقي في أقرب وقت، وشكراً لتعاونكم'} 🌟`;
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
+        }
+
+        // ===== حصص اليوم + تذكير قبل الموعد بـ 5 دقائق =====
+        const REMIND_BEFORE_MIN = 5;
+        const startMin = g => { const [h, m] = String(g.time || '').split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+        function todayClasses() {
+            const day = normDay(getCurrentArabicDayName());
+            return groups.filter(g => String(g.days || '').split(/[,،]/).map(normDay).includes(day) && startMin(g) !== null).sort((a, b) => startMin(a) - startMin(b));
+        }
+        function renderTodayClasses() {
+            const box = $id('todayClassesList'); if (!box) return;
+            const list = todayClasses(), now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+            $id('todayClassesCount').textContent = list.length;
+            box.innerHTML = list.length ? list.map(g => {
+                const d = startMin(g) - nowMin, n = students.filter(s => s.groupId === g.id).length;
+                const eM = endMinOf(g); const badge = (eM !== null && nowMin >= eM) ? '<span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-full font-bold">انتهت</span>'
+                    : d > REMIND_BEFORE_MIN ? '<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold">قادمة</span>'
+                    : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
+                    : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
+                return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(g)} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
+            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
+        }
+        function checkClassReminders() {
+            if (!cloudReady) return;
+            const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes(), today = localDate();
+            let done = {};
+            try { done = JSON.parse(localStorage.getItem('remind_done') || '{}'); } catch (e) {}
+            if (done.date !== today) done = { date: today, ids: [] };
+            todayClasses().forEach(g => {
+                const d = startMin(g) - nowMin;
+                if (d <= 0 || d > REMIND_BEFORE_MIN || done.ids.includes(g.id)) return;
+                done.ids.push(g.id);
+                const msg = `عندك حصة بعد ${d} ${d === 1 ? 'دقيقة' : 'دقائق'} — ${g.grade || ''} — ${g.name} — الساعة ${fmtGroupTime(g.time)}`;
+                $id('classReminderText').textContent = msg;
+                $id('classReminder').classList.remove('hidden');
+                playStatusSound('LATE');
+                showToast('⏰ ' + msg, 'info');
+                try { if ('Notification' in window && Notification.permission === 'granted') new Notification('تذكير بموعد الحصة', { body: msg, icon: 'icon-192.png', tag: 'class-' + g.id }); } catch (e) {}
+            });
+            // إشعار انتهاء الحصة (يظهر في الموقع كله، خلال 30 دقيقة من وقت الانتهاء)
+            if (!Array.isArray(done.end)) done.end = [];
+            todayClasses().forEach(g => {
+                const e = endMinOf(g);
+                if (e === null || nowMin < e || nowMin > e + 30 || done.end.includes(g.id)) return;
+                done.end.push(g.id);
+                const msg = `انتهت حصة ${g.name}${g.grade ? ' — ' + g.grade : ''} — كان موعدها ${fmtGroupRange(g)}`;
+                $id('classEndText').textContent = msg;
+                $id('classEnd').classList.remove('hidden');
+                playStatusSound('LATE');
+                showToast('🏁 ' + msg, 'info');
+                try { if ('Notification' in window && Notification.permission === 'granted') new Notification('انتهت الحصة', { body: msg, icon: 'icon-192.png', tag: 'class-end-' + g.id, requireInteraction: true }); } catch (err) {}
+            });
+            try { localStorage.setItem('remind_done', JSON.stringify(done)); } catch (e) {}
+        }
+        function updateNotifBtn() {
+            const b = $id('notifBtn'); if (!b) return;
+            const ok = 'Notification' in window && Notification.permission === 'granted';
+            b.innerHTML = ok ? '<i class="fa-solid fa-bell ml-1"></i> الإشعارات مفعّلة ✅' : '<i class="fa-solid fa-bell ml-1"></i> تفعيل إشعارات التذكير';
+        }
+        async function enableClassNotifications() {
+            if (!('Notification' in window)) { showToast('المتصفح لا يدعم الإشعارات، سيظهر التنبيه داخل الموقع فقط', 'info'); return; }
+            if (Notification.permission === 'denied') { showToast('الإشعارات محظورة — فعّلها من إعدادات الموقع في المتصفح', 'error'); return; }
+            await Notification.requestPermission();
+            updateNotifBtn();
         }
 
         // UTILS
