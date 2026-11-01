@@ -655,6 +655,20 @@
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label class="block font-bold mb-1">وقت انتهاء الحصة *</label>
+                    <input type="hidden" id="inputGroupEndTime">
+                    <div class="flex gap-2" dir="ltr">
+                        <select id="geHour" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <span class="self-center font-bold">:</span>
+                        <select id="geMin" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="geAmPm" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
+                            <option value="AM">ص</option>
+                            <option value="PM">م</option>
+                        </select>
+                    </div>
+                    <p class="text-[10px] text-[#64748B] mt-1">هيظهر إشعار "انتهت الحصة" في الموقع كله عند الوقت ده.</p>
+                </div>
                 <div class="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                     <button type="button" onclick="closeModal('groupModal')" class="px-4 py-2 bg-[#F1F5F9] text-[#64748B] rounded-xl font-bold">إلغاء</button>
                     <button type="submit" class="px-5 py-2 bg-[#2563EB] text-white rounded-xl font-bold">حفظ المجموعة</button>
@@ -971,6 +985,13 @@
         </div>
     </div>
 
+    <div id="classEnd" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[96] w-[92%] max-w-lg bg-rose-50 border border-rose-100 rounded-2xl shadow-2xl p-4 text-xs">
+        <div class="flex items-start gap-3">
+            <i class="fa-solid fa-flag-checkered text-rose-600 text-xl mt-0.5"></i>
+            <div class="flex-1"><p class="font-black text-rose-700 text-sm">انتهت الحصة</p><p id="classEndText" class="font-bold text-[#0F172A] mt-1 leading-relaxed"></p></div>
+            <button onclick="$id('classEnd').classList.add('hidden')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+        </div>
+    </div>
     <div id="classReminder" class="hidden fixed top-4 left-1/2 -translate-x-1/2 z-[95] w-[92%] max-w-lg bg-amber-50 border border-amber-100 rounded-2xl shadow-2xl p-4 text-xs">
         <div class="flex items-start gap-3">
             <i class="fa-solid fa-bell text-amber-600 text-xl animate-pulse mt-0.5"></i>
@@ -1529,7 +1550,7 @@ const supabaseClient = window.supabase.createClient(
                             </div>
                         </div>
                         <p class="text-xs text-[#64748B]"><i class="fa-solid fa-calendar-days ml-1"></i> الأيام المسموحة: <span class="font-bold text-[#2563EB]">${esc(g.days)}</span></p>
-                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${fmtGroupTime(g.time)}</p>
+                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${fmtGroupRange(g)}</p>
                         <div class="pt-2 border-t border-[#E2E8F0] flex justify-between items-center text-xs">
                             <span class="font-bold text-[#2563EB]">${n} طلاب في المجموعة</span>
                             <button onclick="openGroupStudentsModal('${g.id}')" class="px-3 py-1.5 bg-[#EFF6FF] text-[#2563EB] hover:bg-blue-100 rounded-lg font-bold"><i class="fa-solid fa-users ml-1"></i> عرض الطلاب</button>
@@ -1596,6 +1617,38 @@ const supabaseClient = window.supabase.createClient(
             const m = document.getElementById('gtMin').value;
             document.getElementById('inputGroupTime').value = String(h + (pm ? 12 : 0)).padStart(2, '0') + ':' + m;
         }
+
+        // ===== وقت انتهاء الحصة =====
+        const toMinStr = t => { if (!t) return null; const [h, m] = String(t).split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+        const addMinStr = (t, add) => { let x = (toMinStr(t) ?? 960) + add; x = Math.min(Math.max(x, 0), 23 * 60 + 55); return String(Math.floor(x / 60)).padStart(2, '0') + ':' + String(x % 60).padStart(2, '0'); };
+        function initGroupEndPicker() {
+            const h = $id('geHour'), m = $id('geMin');
+            if (!h || h.options.length) return;
+            for (let i = 1; i <= 12; i++) h.add(new Option(String(i), String(i)));
+            for (let i = 0; i < 60; i += 5) m.add(new Option(String(i).padStart(2, '0'), String(i).padStart(2, '0')));
+        }
+        function setGroupEndUI(t) {
+            initGroupEndPicker();
+            const [hh, mm] = String(t || '18:00').split(':').map(Number);
+            const h24 = isNaN(hh) ? 18 : hh, min = isNaN(mm) ? 0 : mm, minStr = String(min).padStart(2, '0'), minSel = $id('geMin');
+            if (![...minSel.options].some(o => o.value === minStr)) {
+                minSel.add(new Option(minStr, minStr));
+                [...minSel.options].sort((a, b) => a.value - b.value).forEach(o => minSel.appendChild(o));
+            }
+            $id('geHour').value = String(((h24 + 11) % 12) + 1);
+            minSel.value = minStr;
+            $id('geAmPm').value = h24 >= 12 ? 'PM' : 'AM';
+            syncGroupEnd();
+        }
+        function syncGroupEnd() {
+            const h = Number($id('geHour').value) % 12, pm = $id('geAmPm').value === 'PM', m = $id('geMin').value;
+            $id('inputGroupEndTime').value = String(h + (pm ? 12 : 0)).padStart(2, '0') + ':' + m;
+        }
+        const endMinOf = g => (g && g.endTime) ? toMinStr(g.endTime) : null;
+        function fmtGroupRange(g) {
+            return g && g.endTime ? `${fmtGroupTime(g.time)} ← ${fmtGroupTime(g.endTime)}`.replace('←', '–') : fmtGroupTime(g && g.time);
+        }
+
         // توحيد كتابة اليوم للمقارنة
         const normDay = d => String(d).trim().replace(/[أإآ]/g, 'ا');
 
@@ -1603,6 +1656,7 @@ const supabaseClient = window.supabase.createClient(
             $id('editGroupId').value = "";
             $id('inputGroupName').value = "";
             setGroupTimeUI("16:00");
+            setGroupEndUI("18:00");
             const f = $id('groupsGradeFilter').value;
             $id('inputGroupGrade').value = f !== 'ALL' ? f : GRADES[0];
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => cb.checked = false);
@@ -1615,6 +1669,7 @@ const supabaseClient = window.supabase.createClient(
             $id('editGroupId').value = g.id;
             $id('inputGroupName').value = g.name;
             setGroupTimeUI(g.time);
+            setGroupEndUI(g.endTime || addMinStr(g.time, 120));
             $id('inputGroupGrade').value = g.grade || GRADES[0];
             const daysArr = g.days.split(',').map(d => d.trim());
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => { cb.checked = daysArr.includes(cb.value); });
@@ -1630,6 +1685,8 @@ const supabaseClient = window.supabase.createClient(
             const selectedDays = Array.from(document.querySelectorAll('#groupDaysCheckboxGroup input:checked')).map(cb => cb.value);
             if (selectedDays.length === 0) { showToast("يرجى تحديد يوم واحد على الأقل للمجموعة", "error"); return; }
             const daysString = selectedDays.join(', ');
+            const endTime = $id('inputGroupEndTime').value.trim();
+            if (toMinStr(endTime) === null || toMinStr(endTime) <= toMinStr(time)) { showToast('وقت انتهاء الحصة لازم يكون بعد وقت البداية', 'error'); return; }
 
             // منع تعارض مجموعتين في نفس اليوم ونفس الموعد
             const padT = t => { const [a, b] = String(t || '').split(':'); return String(Number(a)).padStart(2, '0') + ':' + String(Number(b) || 0).padStart(2, '0'); };
@@ -1653,10 +1710,10 @@ const supabaseClient = window.supabase.createClient(
                         students.forEach(s => { if (s.groupId === id) s.grade = grade; });
                         localStorage.setItem('sys_students', JSON.stringify(students));
                     }
-                    Object.assign(g, { name, days: daysString, time, grade });
+                    Object.assign(g, { name, days: daysString, time, endTime, grade });
                 }
             } else {
-                groups.push({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time });
+                groups.push({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time, endTime });
             }
             localStorage.setItem('sys_groups', JSON.stringify(groups));
             closeModal('groupModal');
@@ -1704,7 +1761,7 @@ const supabaseClient = window.supabase.createClient(
             const q = $id('groupStudentsSearch').value.toLowerCase().trim();
             const list = all.filter(s => s.name.toLowerCase().includes(q) || String(s.code).toLowerCase().includes(q));
             $id('gsmTitle').textContent = g.name;
-            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${fmtGroupTime(g.time)}`;
+            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${fmtGroupRange(g)}`;
             $id('gsmCount').textContent = all.length;
             $id('gsmBody').innerHTML = list.length ? list.map((s, i) => {
                 const abs = logs.filter(l => l.studentId === s.id && l.status === 'ABSENT').length;
@@ -2422,6 +2479,7 @@ const supabaseClient = window.supabase.createClient(
             setInterval(() => runAutoAbsence(true), 30000);
             setInterval(refreshTodayLogs, 20000);
             setInterval(() => { renderTodayClasses(); checkClassReminders(); }, 30000);
+            setInterval(checkClassReminders, 10000);
             setTimeout(() => { renderTodayClasses(); checkClassReminders(); updateNotifBtn(); runAutoAbsence(true); }, 2500);
         }
 
@@ -2704,7 +2762,7 @@ const supabaseClient = window.supabase.createClient(
             if (!box || !sel) return;
             const g = groups.find(x => x.id === sel.value);
             if (!g) { box.classList.add('hidden'); return; }
-            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${fmtGroupTime(g.time)}`;
+            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${fmtGroupRange(g)}`;
             box.classList.remove('hidden');
         }
         document.addEventListener('change', function(e) {
@@ -3256,10 +3314,11 @@ const supabaseClient = window.supabase.createClient(
             $id('todayClassesCount').textContent = list.length;
             box.innerHTML = list.length ? list.map(g => {
                 const d = startMin(g) - nowMin, n = students.filter(s => s.groupId === g.id).length;
-                const badge = d > REMIND_BEFORE_MIN ? '<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold">قادمة</span>'
+                const eM = endMinOf(g); const badge = (eM !== null && nowMin >= eM) ? '<span class="px-2 py-0.5 bg-slate-200 text-slate-600 rounded-full font-bold">انتهت</span>'
+                    : d > REMIND_BEFORE_MIN ? '<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold">قادمة</span>'
                     : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
                     : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
-                return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupTime(g.time)} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
+                return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(g)} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
             }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
         }
         function checkClassReminders() {
@@ -3278,6 +3337,19 @@ const supabaseClient = window.supabase.createClient(
                 playStatusSound('LATE');
                 showToast('⏰ ' + msg, 'info');
                 try { if ('Notification' in window && Notification.permission === 'granted') new Notification('تذكير بموعد الحصة', { body: msg, icon: 'icon-192.png', tag: 'class-' + g.id }); } catch (e) {}
+            });
+            // إشعار انتهاء الحصة (يظهر في الموقع كله، خلال 30 دقيقة من وقت الانتهاء)
+            if (!Array.isArray(done.end)) done.end = [];
+            todayClasses().forEach(g => {
+                const e = endMinOf(g);
+                if (e === null || nowMin < e || nowMin > e + 30 || done.end.includes(g.id)) return;
+                done.end.push(g.id);
+                const msg = `انتهت حصة ${g.name}${g.grade ? ' — ' + g.grade : ''} — كان موعدها ${fmtGroupRange(g)}`;
+                $id('classEndText').textContent = msg;
+                $id('classEnd').classList.remove('hidden');
+                playStatusSound('LATE');
+                showToast('🏁 ' + msg, 'info');
+                try { if ('Notification' in window && Notification.permission === 'granted') new Notification('انتهت الحصة', { body: msg, icon: 'icon-192.png', tag: 'class-end-' + g.id, requireInteraction: true }); } catch (err) {}
             });
             try { localStorage.setItem('remind_done', JSON.stringify(done)); } catch (e) {}
         }
