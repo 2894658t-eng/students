@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#081a36">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نظام الحضور - أحمد جابر </title>
@@ -156,7 +158,7 @@
         .qrcard-grade { font-size: 3.7cqw; font-weight: 700; color: #f5a623; margin-top: 2.4cqw; line-height: 1.4; }
         .qrcard-group { font-size: 3.6cqw; font-weight: 500; color: #bfdbfe; margin-top: 2cqw; line-height: 1.4; }
         .qrcard-box { background: #ffffff; border-radius: 5cqw; margin-top: 5.5cqw; padding: 3.8cqw 0 3cqw; display: flex; flex-direction: column; align-items: center; }
-        #cardQrCode { width: 44cqw; height: 44cqw; }
+        #cardQrCode { width: 60cqw; height: 60cqw; }
         #cardQrCode img, #cardQrCode canvas { width: 100% !important; height: 100% !important; display: block; }
         .qrcard-code { font-size: 3.1cqw; font-weight: 700; color: #b6c3da; margin-top: 2.2cqw; letter-spacing: .06em; line-height: 1.4; }
         .qrcard-foot { border-top: 1px solid rgba(255,255,255,.2); margin-top: 4.5cqw; padding-top: 3.5cqw; }
@@ -506,7 +508,7 @@
                             <i class="fa-solid fa-user-clock"></i> فحص الغياب التلقائي
                         </button>
                         <input type="text" id="logSearchInput" oninput="renderLogsTable()" placeholder="ابحث باسم الطالب أو ID..." class="px-3 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs outline-none">
-                        <input type="date" id="logDateFilter" onchange="renderLogsTable()" class="px-3 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs outline-none">
+                        <input type="date" id="logDateFilter" onchange="loadLogsDate(this.value);renderLogsTable()" class="px-3 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs outline-none">
                     </div>
                 </div>
                 <div id="printableArea" class="bg-white rounded-2xl border border-[#E2E8F0] shadow-sm overflow-hidden">
@@ -1169,7 +1171,12 @@ const supabaseClient = window.supabase.createClient(
                     if (data.length < size) break;
                 }
             };
-            await pull(q => q.neq('collection', 'logs'));
+            const hcut = localDate(new Date(Date.now() - 180 * 86400000));
+            await pull(q => q.not('collection', 'in', '(logs,exam_grades,eval_logs)'));
+            await pull(q => q.eq('collection', 'eval_logs').gte('data->>date', hcut));
+            const recentEx = rows.filter(r => r.collection === 'exams' && (!r.data.date || r.data.date >= hcut)).map(r => r.id).filter(i => /^[\w-]+$/.test(i));
+            window._loadedExams = new Set(recentEx);
+            for (let i = 0; i < recentEx.length; i += 15) { const ids = '(' + recentEx.slice(i, i + 15).join(',') + ')'; await pull(q => q.eq('collection', 'exam_grades').filter('data->>examId', 'in', ids)); }
             await pull(q => q.eq('collection', 'logs').gte('data->>date', cutoff));
             const by = {};
             Object.values(COLLECTIONS).forEach(c => by[c] = []);
@@ -1636,7 +1643,7 @@ const supabaseClient = window.supabase.createClient(
                 return;
             }
             container.innerHTML = list.map(g => {
-                const n = students.filter(s => s.groupId === g.id).length;
+                const n = students.filter(s => s.groupId === g.id).length, isC = (g.cancelled || []).includes(localDate());
                 return `
                     <div class="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm space-y-3 relative">
                         <div class="flex justify-between items-start gap-2">
@@ -1651,6 +1658,7 @@ const supabaseClient = window.supabase.createClient(
                         </div>
                         <p class="text-xs text-[#64748B]"><i class="fa-solid fa-calendar-days ml-1"></i> الأيام المسموحة: <span class="font-bold text-[#2563EB]">${esc(g.days)}</span></p>
                         <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${daySummary(g)}</p>
+                        <button onclick="toggleCancelToday('${g.id}')" class="w-full px-3 py-1.5 rounded-lg text-xs font-bold ${isC ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}">${isC ? '↩ إعادة تفعيل حصة اليوم' : '🚫 إلغاء حصة اليوم / إجازة'}</button>
                         <div class="pt-2 border-t border-[#E2E8F0] flex justify-between items-center text-xs">
                             <span class="font-bold text-[#2563EB]">${n} طلاب في المجموعة</span>
                             <button onclick="openGroupStudentsModal('${g.id}')" class="px-3 py-1.5 bg-[#EFF6FF] text-[#2563EB] hover:bg-blue-100 rounded-lg font-bold"><i class="fa-solid fa-users ml-1"></i> عرض الطلاب</button>
@@ -1953,6 +1961,84 @@ const supabaseClient = window.supabase.createClient(
             if (code) { processStudentCode(code); document.getElementById('manualCodeInput').value = ''; }
         }
 
+        // ===== حفظ سجل واحد + طابور Offline =====
+        const OFFQ = 'off_queue';
+        const offQ = () => { try { return JSON.parse(localStorage.getItem(OFFQ) || '[]'); } catch (e) { return []; } };
+        const offSave = q => { try { localStorage.setItem(OFFQ, JSON.stringify(q)); } catch (e) {} };
+        function showOffBadge() {
+            let b = document.getElementById('offBadge');
+            if (!b) { b = document.createElement('div'); b.id = 'offBadge'; b.style.cssText = 'position:fixed;bottom:12px;left:12px;z-index:200;background:#b45309;color:#fff;font:700 12px Cairo,sans-serif;padding:6px 12px;border-radius:999px;display:none'; document.body.appendChild(b); }
+            const n = offQ().length; b.style.display = n ? 'block' : 'none'; b.textContent = '⚠ ' + n + ' عملية بانتظار الإنترنت';
+        }
+        async function upsertRows(rows, insertOnly) {
+            for (let i = 0; i < rows.length; i += 200) {
+                const { error } = await supabaseClient.from('records').upsert(rows.slice(i, i + 200), { onConflict: 'collection,id', ignoreDuplicates: !!insertOnly });
+                if (error) return false;
+            }
+            return true;
+        }
+        async function saveLogs(list, insertOnly) {
+            const rows = list.map(l => ({ collection: 'logs', id: l.id, data: l }));
+            if (cloudReady && navigator.onLine && await upsertRows(rows, insertOnly)) {
+                if (!insertOnly) { const m = synced['logs'] || (synced['logs'] = new Map()); list.forEach(l => m.set(l.id, JSON.stringify(l))); }
+                return true;
+            }
+            const q = offQ().filter(x => !rows.some(r => r.id === x.row.id));
+            rows.forEach(r => q.push({ row: r, io: !!insertOnly })); offSave(q); showOffBadge(); return false;
+        }
+        const saveLog = l => saveLogs([l], false);
+        async function flushOffQ() {
+            if (!cloudReady || !navigator.onLine || window._flushing) return;
+            const q = offQ(); if (!q.length) return; window._flushing = true;
+            try {
+                const a = q.filter(x => !x.io).map(x => x.row), b = q.filter(x => x.io).map(x => x.row);
+                const okA = !a.length || await upsertRows(a, false), okB = !b.length || await upsertRows(b, true);
+                offSave(q.filter(x => x.io ? !okB : !okA)); showOffBadge();
+                if (okA && okB) { showToast('تمت مزامنة عمليات المسح المحفوظة', 'success'); refreshTodayLogs(true); }
+            } finally { window._flushing = false; }
+        }
+        window.addEventListener('online', flushOffQ); setInterval(flushOffQ, 15000); setInterval(showOffBadge, 5000);
+
+        // ===== متأخرات الطالب (تظهر لحظة المسح) =====
+        function dueOf(st) { let t = 0; paymentPlans.forEach(p => { if (planApplies(p, st)) t += Math.max(0, Number(p.amount) - paidAmountOf(p, getPaymentRecord(p.id, st.id))); }); return t; }
+        function showDueBar(st) {
+            const b = $id('scanResultBox'); if (!b) return;
+            const o = b.querySelector('.due-bar'); if (o) o.remove();
+            const d = dueOf(st); if (d <= 0) return;
+            const e = document.createElement('div'); e.className = 'due-bar';
+            e.style.cssText = 'margin-top:10px;width:100%;background:#dc2626;color:#fff;font-weight:800;font-size:13px;padding:8px 12px;border-radius:12px';
+            e.textContent = '⚠ عليه متأخرات: ' + d + ' جنيه'; b.appendChild(e);
+        }
+
+        // ===== إلغاء حصة اليوم / إجازة =====
+        function toggleCancelToday(id) {
+            const g = groups.find(x => x.id === id); if (!g) return;
+            const t = localDate(); g.cancelled = g.cancelled || []; const i = g.cancelled.indexOf(t);
+            if (i > -1) g.cancelled.splice(i, 1);
+            else { if (!confirm('إلغاء حصة ' + g.name + ' اليوم؟ لن يُسجَّل غياب ولن يُقبل مسح لهذه المجموعة.')) return; g.cancelled.push(t); }
+            g.cancelled = g.cancelled.slice(-30);
+            localStorage.setItem('sys_groups', JSON.stringify(groups)); renderGroupsCards();
+            showToast(i > -1 ? 'تم إعادة تفعيل حصة اليوم' : 'تم إلغاء حصة اليوم', 'success');
+        }
+
+        // ===== تحميل السجلات القديمة عند الطلب =====
+        async function loadLogsDate(d) {
+            if (!cloudReady || !d || d >= localDate(new Date(Date.now() - LOG_DAYS * 86400000))) return;
+            window._logDays = window._logDays || new Set(); if (window._logDays.has(d)) return; window._logDays.add(d);
+            const { data } = await supabaseClient.from('records').select('id,data').eq('collection', 'logs').eq('data->>date', d);
+            const m = synced['logs'] || (synced['logs'] = new Map());
+            (data || []).forEach(r => { if (!logs.some(l => l.id === r.id)) { logs.push(r.data); m.set(r.id, JSON.stringify(r.data)); } });
+            renderLogsTable();
+        }
+        async function ensureExamGrades(id) {
+            if (!cloudReady || !id || (window._loadedExams && window._loadedExams.has(id))) return;
+            const { data } = await supabaseClient.from('records').select('id,data').eq('collection', 'exam_grades').eq('data->>examId', id);
+            const m = synced['exam_grades'] || (synced['exam_grades'] = new Map());
+            const have = new Set(examGrades.map(g => recId('exam_grades', g)));
+            (data || []).forEach(r => { if (!have.has(r.id)) { examGrades.push(r.data); m.set(r.id, JSON.stringify(r.data)); } });
+            (window._loadedExams = window._loadedExams || new Set()).add(id);
+        }
+
         function processStudentCode(code) {
             code = String(code || '').trim();
             if (!code) return;
@@ -1980,9 +2066,15 @@ const supabaseClient = window.supabase.createClient(
                 return;
             }
 
-            const allowedDays = autoGroup.days.split(',').map(d => d.trim());
+            if ((autoGroup.cancelled || []).includes(localDate()) && !($id('scanOverride') && $id('scanOverride').checked)) {
+                playStatusSound('ERROR');
+                document.getElementById('scanResultBox').innerHTML = `<div class="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-ban"></i></div><h3 class="font-bold text-amber-600 text-base">حصة ${esc(autoGroup.name)} ملغاة اليوم</h3><p class="text-xs font-bold text-[#0F172A] mt-1">${esc(student.name)}</p>`;
+                showToast('حصة هذه المجموعة ملغاة اليوم', 'error');
+                return;
+            }
+            const allowedDays = autoGroup.days.split(/[,،]/).map(normDay);
 
-            if (!allowedDays.includes(currentArabicDay) && !($id('scanOverride') && $id('scanOverride').checked)) {
+            if (!allowedDays.includes(normDay(currentArabicDay)) && !($id('scanOverride') && $id('scanOverride').checked)) {
                 playStatusSound('ERROR');
                 const box = document.getElementById('scanResultBox');
                 box.innerHTML = `
@@ -2033,6 +2125,13 @@ const supabaseClient = window.supabase.createClient(
 
             let existingLog = logs.find(l => l.studentId === student.id && l.date === today);
 
+            if (existingLog && existingLog.status !== 'ABSENT') {
+                playStatusSound(existingLog.status);
+                renderScanResult(student, code, true, existingLog.status, existingLog.time);
+                showDueBar(student);
+                showToast('مسجّل بالفعل الساعة ' + existingLog.time, 'info');
+                return;
+            }
             if (existingLog) {
                 existingLog.status = statusMode;
                 existingLog.time = timeNow;
@@ -2053,9 +2152,10 @@ const supabaseClient = window.supabase.createClient(
                 });
             }
 
-            localStorage.setItem('sys_logs', JSON.stringify(logs));
+            saveLog(existingLog || logs[0]);
             playStatusSound(statusMode);
             renderScanResult(student, code, true, statusMode, timeNow);
+            showDueBar(student);
             showToast(`تم تسجيل ${student.name} في مجموعته تلقائياً`, "success");
             renderLogsTable();
             updateDashboardCharts();
@@ -2394,7 +2494,8 @@ const supabaseClient = window.supabase.createClient(
             if (list.some(ex => ex.id === previous)) select.value = previous;
         }
 
-        function onExamSelectChange() {
+        async function onExamSelectChange() {
+            await ensureExamGrades($id('examSelectFilter').value);
             renderExamGradesTable();
         }
 
@@ -2546,10 +2647,15 @@ const supabaseClient = window.supabase.createClient(
         }
 
         const canonObj = o => JSON.stringify(Object.keys(o).sort().map(k => [k, o[k]]));
-        async function refreshTodayLogs() {
-            if (!cloudReady || pendingSyncs > 0) return;
-            const { data, error } = await supabaseClient.from('records').select('id,data').eq('collection', 'logs').eq('data->>date', localDate());
+        async function refreshTodayLogs(force) {
+            if (!cloudReady || !navigator.onLine || (!force && (pendingSyncs > 0 || document.hidden))) return;
+            const startPoll = new Date().toISOString();
+            if (!window._fullAt || Date.now() - window._fullAt > 300000) { window._lastPoll = null; window._fullAt = Date.now(); }
+            let q = supabaseClient.from('records').select('id,data').eq('collection', 'logs').eq('data->>date', localDate());
+            if (window._lastPoll) q = q.gt('data->>ts', new Date(Date.parse(window._lastPoll) - 120000).toISOString());
+            const { data, error } = await q;
             if (error || !data) return;
+            window._lastPoll = startPoll;
             const m = synced['logs'] || new Map();
             let changed = false;
             data.forEach(r => {
@@ -2568,23 +2674,24 @@ const supabaseClient = window.supabase.createClient(
             window._absBusy = true;
             let n = 0;
             try {
-                await refreshTodayLogs();
+                await refreshTodayLogs(true);
                 const today = localDate(), day = normDay(getCurrentArabicDayName());
                 const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
                 const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
-                const seen = new Set(logs.filter(l => l.date === today).map(l => l.studentId));
+                const seen = new Set(logs.filter(l => l.date === today).map(l => l.studentId)), rows = [];
                 groups.forEach(g => {
                     if (onlyGroupId && g.id !== onlyGroupId) return;
-                    if (!String(g.days || '').split(/[,،]/).map(normDay).includes(day)) return;
+                    if (!String(g.days || '').split(/[,،]/).map(normDay).includes(day) || (g.cancelled || []).includes(today)) return;
                     const w = groupWindow(g);
                     if (!w || nowMin < w.absentFrom) return;
                     students.filter(s => s.groupId === g.id && !seen.has(s.id)).forEach(s => {
-                        logs.unshift({ id: 'LOG-' + s.id + '-' + today, studentId: s.id, studentName: s.name, studentCode: s.code, groupId: g.id, date: today, time: timeStr, ts: now.toISOString(), status: 'ABSENT' });
+                        rows.push({ id: 'LOG-' + s.id + '-' + today, studentId: s.id, studentName: s.name, studentCode: s.code, groupId: g.id, date: today, time: timeStr, ts: now.toISOString(), status: 'ABSENT' });
                         seen.add(s.id); n++;
                     });
                 });
                 if (n) {
-                    localStorage.setItem('sys_logs', JSON.stringify(logs));
+                    await saveLogs(rows, true);          // insert-only: لا يكتب فوق حضور مسجّل
+                    await refreshTodayLogs(true);
                     playStatusSound('ERROR');
                     renderLogsTable(); updateDashboardCharts(); renderStudentsTable();
                 }
@@ -2668,8 +2775,8 @@ const supabaseClient = window.supabase.createClient(
         function updateLogStatus(logId, newStatus) {
             const l = logs.find(x => x.id === logId);
             if (l) {
-                l.status = newStatus;
-                localStorage.setItem('sys_logs', JSON.stringify(logs));
+                l.status = newStatus; l.ts = new Date().toISOString();
+                saveLog(l);
                 updateDashboardCharts();
                 renderStudentsTable();
                 showToast("تم تحديث حالة الحضور", "success");
@@ -2963,7 +3070,7 @@ const supabaseClient = window.supabase.createClient(
             if (!Number.isFinite(amt) || amt < 0) amt = 0;
             if (amt > Number(plan.amount)) { amt = Number(plan.amount); showToast('المبلغ أكبر من المطلوب، تم ضبطه على المطلوب', 'error'); }
             let rec = getPaymentRecord(planId, studentId);
-            if (!rec) { rec = { id: 'SP-' + Date.now() + '-' + studentId, planId, studentId, paid: false, paidDate: '', amountPaid: 0 }; studentPayments.push(rec); }
+            if (!rec) { rec = { id: 'SP-' + planId + '-' + studentId, planId, studentId, paid: false, paidDate: '', amountPaid: 0 }; studentPayments.push(rec); }
             const prevPaid = paidAmountOf(plan, rec);
             rec.amountPaid = amt;
             rec.paid = amt > 0 && amt >= Number(plan.amount);
@@ -3211,7 +3318,7 @@ const supabaseClient = window.supabase.createClient(
             do { ctx.font = weight + ' ' + s + 'px ' + family; s -= 0.5; } while (ctx.measureText(text).width > maxW && s > 8);
         }
         async function buildStudentCardCanvas(s) {
-            const K = 3, u = v => v * K, M = 20, CW = 420, CH = 612;   // وحدة التصميم 420 عرض البطاقة × 3 دقة
+            const K = 3, u = v => v * K, M = 20, CW = 420, CH = 672;   // وحدة التصميم 420 عرض البطاقة × 3 دقة
             const W = u(CW + M * 2), H = u(CH + M * 2), OX = u(M), OY = u(M);
             const grp = groups.find(g => g.id === s.groupId);
             try { await Promise.all(['400', '500', '700', '800'].map(w => document.fonts.load(w + ' 40px Cairo'))); } catch (e) {}
@@ -3234,8 +3341,8 @@ const supabaseClient = window.supabase.createClient(
             const gname = grp ? grp.name : '--';
             ctx.fillStyle = '#bfdbfe'; _fitText(ctx, gname, '500', u(15), maxW, fam); ctx.fillText(gname, cx, OY + u(236));
             // الصندوق الأبيض + QR + الكود
-            _rrect(ctx, OX + u(22), OY + u(264), u(376), u(242), u(20)); ctx.fillStyle = '#ffffff'; ctx.fill();
-            const QS = u(185), tmp = document.createElement('div');
+            _rrect(ctx, OX + u(22), OY + u(264), u(376), u(312), u(20)); ctx.fillStyle = '#ffffff'; ctx.fill();
+            const QS = u(252), tmp = document.createElement('div');
             tmp.style.cssText = 'position:fixed;left:-9999px;top:0';
             document.body.appendChild(tmp);
             try {
@@ -3247,16 +3354,16 @@ const supabaseClient = window.supabase.createClient(
             } finally { tmp.remove(); }
             ctx.direction = 'ltr'; ctx.fillStyle = '#b6c3da'; ctx.font = '700 ' + u(13) + 'px ' + fam;
             if (ctx.letterSpacing !== undefined) ctx.letterSpacing = u(0.8) + 'px';
-            ctx.fillText(String(s.code), cx, OY + u(484));
+            ctx.fillText(String(s.code), cx, OY + u(551));
             if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '0px';
             // الفوتر
-            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(OX + u(22), OY + u(525), u(376), K);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(OX + u(22), OY + u(585), u(376), K);
             ctx.direction = 'rtl'; ctx.fillStyle = '#f5a623'; ctx.font = '800 ' + u(15) + 'px ' + fam;
-            ctx.fillText('سنتر مستر أحمد جابر', cx, OY + u(545));
+            ctx.fillText('سنتر مستر أحمد جابر', cx, OY + u(605));
             ctx.fillStyle = '#dbeafe'; ctx.font = '500 ' + u(11.5) + 'px ' + fam;
-            ctx.fillText('هيكلة وتصميم م. إبراهيم عبد الراضي', cx, OY + u(566));
+            ctx.fillText('هيكلة وتصميم م. إبراهيم عبد الراضي', cx, OY + u(626));
             ctx.direction = 'ltr'; ctx.font = '500 ' + u(11.5) + 'px monospace';
-            ctx.fillText('01155121562', cx, OY + u(584));
+            ctx.fillText('01155121562', cx, OY + u(644));
             return c;
         }
         async function downloadStudentQR() {
@@ -3730,5 +3837,6 @@ const supabaseClient = window.supabase.createClient(
     applyTheme(document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     if (window.UI_LANG === 'en') applyI18N(); else { i18nObserver.observe(document.body, OBS_OPTS); applyI18N(); }
 </script>
+<script>if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
 </body>
 </html>
