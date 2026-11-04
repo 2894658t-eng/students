@@ -660,13 +660,19 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block font-bold mb-1">ميعاد كل يوم (البداية والنهاية) *</label>
+                    <div id="perDayTimes" class="space-y-2 p-3 bg-[#F1F5F9] rounded-xl border border-[#E2E8F0]"></div>
+                    <p class="text-[10px] text-[#64748B] mt-1">كل يوم ليه ميعاده: مثلاً السبت 2 ظهراً والثلاثاء 10 صباحاً. وقت الانتهاء بيظهر عنده إشعار "انتهت الحصة".</p>
+                </div>
+                <div class="hidden" aria-hidden="true">
+                <div>
                     <label class="block font-bold mb-1">توقيت الحصة (توقيت بدء الحصة) *</label>
                     <input type="hidden" id="inputGroupTime">
                     <div class="flex gap-2" dir="ltr">
-                        <select id="gtHour" required onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="gtHour" onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
                         <span class="self-center font-bold">:</span>
-                        <select id="gtMin" required onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
-                        <select id="gtAmPm" required onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
+                        <select id="gtMin" onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="gtAmPm" onchange="syncGroupTime()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
                             <option value="AM" data-i18n-ampm="AM">ص</option>
                             <option value="PM" data-i18n-ampm="PM">م</option>
                         </select>
@@ -676,15 +682,15 @@
                     <label class="block font-bold mb-1">وقت انتهاء الحصة *</label>
                     <input type="hidden" id="inputGroupEndTime">
                     <div class="flex gap-2" dir="ltr">
-                        <select id="geHour" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="geHour" onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
                         <span class="self-center font-bold">:</span>
-                        <select id="geMin" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
-                        <select id="geAmPm" required onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
+                        <select id="geMin" onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-mono"></select>
+                        <select id="geAmPm" onchange="syncGroupEnd()" class="flex-1 p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl outline-none font-bold">
                             <option value="AM">ص</option>
                             <option value="PM">م</option>
                         </select>
                     </div>
-                    <p class="text-[10px] text-[#64748B] mt-1">هيظهر إشعار "انتهت الحصة" في الموقع كله عند الوقت ده.</p>
+                </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-3 border-t border-[#E2E8F0]">
                     <button type="button" onclick="closeModal('groupModal')" class="px-4 py-2 bg-[#F1F5F9] text-[#64748B] rounded-xl font-bold">إلغاء</button>
@@ -1477,11 +1483,11 @@ const supabaseClient = window.supabase.createClient(
         // المجموعة الحالية تلقائياً: آخر مجموعة بدأ موعدها اليوم (أو أول مجموعة قادمة لو لسه ما بدأش أي موعد)
         function getAutoCurrentGroup(todayGroups) {
             if (!todayGroups.length) return null;
-            const sorted = todayGroups.slice().sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+            const sorted = todayGroups.slice().sort((a, b) => (slotOf(a).time || '').localeCompare(slotOf(b).time || ''));
             const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
             const toMin = t => { const [h, m] = (t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
             let cur = null;
-            sorted.forEach(g => { if (toMin(g.time) <= nowMin) cur = g; });
+            sorted.forEach(g => { if (toMin(slotOf(g).time) <= nowMin) cur = g; });
             return cur || sorted[0];
         }
 
@@ -1490,21 +1496,67 @@ const supabaseClient = window.supabase.createClient(
             if (!sel) return null;
             const day = getCurrentArabicDayName();
             const todayGroups = groups.filter(g => (g.days || '').split(',').map(d => d.trim()).includes(day))
-                .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+                .sort((a, b) => (slotOf(a).time || '').localeCompare(slotOf(b).time || ''));
             const prev = sel.value;
             sel.innerHTML = `<option value="AUTO">تلقائي (المجموعة الحالية حسب الموعد)</option>` +
-                todayGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${fmtGroupTime(g.time)}</option>`).join('');
+                todayGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${fmtGroupTime(slotOf(g).time)}</option>`).join('');
             sel.value = (prev === 'AUTO' || todayGroups.some(g => g.id === prev)) && prev ? prev : 'AUTO';
             return todayGroups;
         }
 
+
+        // ===== مواعيد مختلفة لكل يوم (مثلاً السبت 2 ظهراً والثلاثاء 10 صباحاً) =====
+        // g.dayTimes = { "السبت": {time:"14:00", endTime:"16:00"}, "الثلاثاء": {...} }  (اختياري، لو مش موجود يستخدم g.time / g.endTime لكل الأيام)
+        function _nd(d) { return String(d || '').trim().replace(/[أإآ]/g, 'ا'); }
+        function slotOf(g, day) {
+            const base = { time: g && g.time, endTime: g && g.endTime };
+            if (!g || !g.dayTimes) return base;
+            const k = _nd(day || getCurrentArabicDayName());
+            for (const key in g.dayTimes) {
+                if (_nd(key) === k) { const v = g.dayTimes[key] || {}; return { time: v.time || base.time, endTime: v.endTime || base.endTime }; }
+            }
+            return base;
+        }
+        function forDay(g, day) { return g ? Object.assign({}, g, slotOf(g, day)) : g; }
+        function daySummary(g) {
+            if (!g || !g.dayTimes) return fmtGroupRange(g);
+            const days = String(g.days || '').split(/[,،]/).map(d => d.trim()).filter(Boolean);
+            const parts = days.map(d => [d, fmtGroupRange(forDay(g, d))]);
+            if (parts.every(x => x[1] === parts[0][1])) return parts[0][1];
+            return parts.map(x => `${x[0]}: ${x[1]}`).join(' | ');
+        }
+        function timeLabel(g) {
+            if (!g) return '';
+            if (!g.dayTimes) return fmtGroupTime(g.time);
+            const seen = [];
+            String(g.days || '').split(/[,،]/).map(d => d.trim()).filter(Boolean).forEach(d => { const t = fmtGroupTime(slotOf(g, d).time); if (!seen.includes(t)) seen.push(t); });
+            return seen.join(' / ');
+        }
+        function renderPerDayTimes(preset) {
+            const box = $id('perDayTimes');
+            if (!box) return;
+            const cur = {};
+            box.querySelectorAll('[data-pd]').forEach(r => { cur[r.dataset.pd] = { time: r.querySelector('.pd-s').value, endTime: r.querySelector('.pd-e').value }; });
+            const lastCur = Object.values(cur).pop();
+            const days = Array.from(document.querySelectorAll('#groupDaysCheckboxGroup input:checked')).map(cb => cb.value);
+            const defT = $id('inputGroupTime').value || '16:00', defE = $id('inputGroupEndTime').value || '18:00';
+            const cls = 'flex-1 min-w-0 p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg outline-none font-mono';
+            box.innerHTML = days.length ? days.map(d => {
+                const p = preset ? slotOf({ time: defT, endTime: defE, dayTimes: preset }, d) : null;
+                const v = cur[d] || p || lastCur || { time: defT, endTime: defE };
+                return `<div data-pd="${d}" class="flex items-center gap-2"><span class="w-16 font-bold shrink-0">${d}</span><input type="time" required class="pd-s ${cls}" value="${v.time || defT}"><span class="text-[#64748B]">إلى</span><input type="time" required class="pd-e ${cls}" value="${v.endTime || defE}"></div>`;
+            }).join('') : '<p class="text-[#64748B]">اختار أيام المجموعة فوق وبعدين حدد ميعاد كل يوم.</p>';
+        }
+        document.addEventListener('change', e => { if (e.target && e.target.closest && e.target.closest('#groupDaysCheckboxGroup')) renderPerDayTimes(); });
+
         // ===== نافذة الحصة: فتح التسجيل قبل الموعد بـ 20 د — احتساب الغياب بعد الموعد بـ 15 د — قفل التسجيل عند انتهاء الحصة =====
         const CHECKIN_OPEN_BEFORE_MIN = 20;
         const ABSENCE_GRACE_MIN = 15;
-        function groupWindow(g) {
-            const st = toMinStr(g && g.time);
+        function groupWindow(g, day) {
+            const sl = slotOf(g, day);
+            const st = toMinStr(sl.time);
             if (st === null) return null;
-            const en = (g && g.endTime && toMinStr(g.endTime) !== null) ? toMinStr(g.endTime) : st + 120;
+            const en = (sl.endTime && toMinStr(sl.endTime) !== null) ? toMinStr(sl.endTime) : st + 120;
             return { start: st, open: st - CHECKIN_OPEN_BEFORE_MIN, absentFrom: st + ABSENCE_GRACE_MIN, end: en };
         }
 
@@ -1529,7 +1581,7 @@ const supabaseClient = window.supabase.createClient(
             const absentCount = (_w && _nowM >= _w.absentFrom) ? Math.max(0, groupStudents.length - (presentCount + lateCount)) : 0;
 
             const info = $id('dashGroupInfo');
-            if (info) info.textContent = chosen ? `${chosen.days || ''} — ${fmtGroupTime(chosen.time)} — ${groupStudents.length} طالب` : 'لا توجد مجموعة اليوم';
+            if (info) info.textContent = chosen ? `${chosen.days || ''} — ${fmtGroupTime(slotOf(chosen).time)} — ${groupStudents.length} طالب` : 'لا توجد مجموعة اليوم';
 
             document.getElementById('statTotalStudents').textContent = students.length;
             document.getElementById('statPresentToday').textContent = presentCount;
@@ -1598,7 +1650,7 @@ const supabaseClient = window.supabase.createClient(
                             </div>
                         </div>
                         <p class="text-xs text-[#64748B]"><i class="fa-solid fa-calendar-days ml-1"></i> الأيام المسموحة: <span class="font-bold text-[#2563EB]">${esc(g.days)}</span></p>
-                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${fmtGroupRange(g)}</p>
+                        <p class="text-xs text-[#64748B]"><i class="fa-solid fa-clock ml-1"></i> الموعد: ${daySummary(g)}</p>
                         <div class="pt-2 border-t border-[#E2E8F0] flex justify-between items-center text-xs">
                             <span class="font-bold text-[#2563EB]">${n} طلاب في المجموعة</span>
                             <button onclick="openGroupStudentsModal('${g.id}')" class="px-3 py-1.5 bg-[#EFF6FF] text-[#2563EB] hover:bg-blue-100 rounded-lg font-bold"><i class="fa-solid fa-users ml-1"></i> عرض الطلاب</button>
@@ -1617,7 +1669,7 @@ const supabaseClient = window.supabase.createClient(
             const extra = keep ? groups.find(g => g.id === keep && g.grade !== grade) : null;
             if (extra) list.push(extra);
             sel.innerHTML = list.length
-                ? list.map(g => `<option value="${g.id}">${esc(g.name)} (${fmtGroupTime(g.time)})${g.grade !== grade ? ' — ' + esc(g.grade) : ''}</option>`).join('')
+                ? list.map(g => `<option value="${g.id}">${esc(g.name)} (${timeLabel(g)})${g.grade !== grade ? ' — ' + esc(g.grade) : ''}</option>`).join('')
                 : '<option value="">لا توجد مجموعات لهذا الصف — أنشئ مجموعة أولاً</option>';
             if ([...sel.options].some(o => o.value === cur)) sel.value = cur;
         }
@@ -1692,7 +1744,7 @@ const supabaseClient = window.supabase.createClient(
             const h = Number($id('geHour').value) % 12, pm = $id('geAmPm').value === 'PM', m = $id('geMin').value;
             $id('inputGroupEndTime').value = String(h + (pm ? 12 : 0)).padStart(2, '0') + ':' + m;
         }
-        const endMinOf = g => (g && g.endTime) ? toMinStr(g.endTime) : null;
+        const endMinOf = g => { const e = slotOf(g).endTime; return e ? toMinStr(e) : null; };
         function fmtGroupRange(g) {
             return g && g.endTime ? `${fmtGroupTime(g.time)} ← ${fmtGroupTime(g.endTime)}`.replace('←', '–') : fmtGroupTime(g && g.time);
         }
@@ -1708,6 +1760,7 @@ const supabaseClient = window.supabase.createClient(
             const f = $id('groupsGradeFilter').value;
             $id('inputGroupGrade').value = f !== 'ALL' ? f : GRADES[0];
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => cb.checked = false);
+            $id('perDayTimes').innerHTML = ''; renderPerDayTimes();
             $id('groupModal').classList.remove('hidden');
         }
 
@@ -1721,6 +1774,7 @@ const supabaseClient = window.supabase.createClient(
             $id('inputGroupGrade').value = g.grade || GRADES[0];
             const daysArr = g.days.split(',').map(d => d.trim());
             document.querySelectorAll('#groupDaysCheckboxGroup input').forEach(cb => { cb.checked = daysArr.includes(cb.value); });
+            $id('perDayTimes').innerHTML = ''; renderPerDayTimes(g.dayTimes);
             $id('groupModal').classList.remove('hidden');
         }
 
@@ -1728,23 +1782,35 @@ const supabaseClient = window.supabase.createClient(
             e.preventDefault();
             const id = $id('editGroupId').value;
             const name = $id('inputGroupName').value.trim();
-            const time = $id('inputGroupTime').value.trim();
+            let time = $id('inputGroupTime').value.trim();
             const grade = $id('inputGroupGrade').value;
             const selectedDays = Array.from(document.querySelectorAll('#groupDaysCheckboxGroup input:checked')).map(cb => cb.value);
             if (selectedDays.length === 0) { showToast("يرجى تحديد يوم واحد على الأقل للمجموعة", "error"); return; }
             const daysString = selectedDays.join(', ');
-            const endTime = $id('inputGroupEndTime').value.trim();
-            if (toMinStr(endTime) === null || toMinStr(endTime) <= toMinStr(time)) { showToast('وقت انتهاء الحصة لازم يكون بعد وقت البداية', 'error'); return; }
+            let endTime = $id('inputGroupEndTime').value.trim();
+
+            // موعد كل يوم من السطور اللي في النافذة
+            const daySlots = {};
+            for (const row of document.querySelectorAll('#perDayTimes [data-pd]')) {
+                const d = row.dataset.pd, st = row.querySelector('.pd-s').value, en = row.querySelector('.pd-e').value;
+                if (toMinStr(st) === null || toMinStr(en) === null) { showToast(`حدد وقت البداية والنهاية ليوم ${d}`, 'error'); return; }
+                if (toMinStr(en) <= toMinStr(st)) { showToast(`يوم ${d}: وقت الانتهاء لازم يكون بعد وقت البداية`, 'error'); return; }
+                daySlots[d] = { time: st, endTime: en };
+            }
+            if (Object.keys(daySlots).length !== selectedDays.length) { showToast('حدد ميعاد لكل يوم من أيام المجموعة', 'error'); return; }
+            time = daySlots[selectedDays[0]].time; endTime = daySlots[selectedDays[0]].endTime;
+            // لو كل الأيام نفس الميعاد منحفظ بالطريقة القديمة، غير كده منحفظ ميعاد كل يوم
+            const sameAll = selectedDays.every(d => daySlots[d].time === time && daySlots[d].endTime === endTime);
+            const dayTimes = sameAll ? null : daySlots;
 
             // منع تعارض مجموعتين في نفس اليوم ونفس الموعد
             const padT = t => { const [a, b] = String(t || '').split(':'); return String(Number(a)).padStart(2, '0') + ':' + String(Number(b) || 0).padStart(2, '0'); };
-            const mySet = selectedDays.map(normDay);
             for (const other of groups) {
                 if (other.id === id) continue;
-                if (padT(other.time) !== padT(time)) continue;
-                const shared = String(other.days || '').split(/[,،]/).map(normDay).filter(d => mySet.includes(d));
+                const otherDays = String(other.days || '').split(/[,،]/).map(normDay);
+                const shared = selectedDays.filter(d => otherDays.includes(normDay(d)) && padT(slotOf(other, d).time) === padT(daySlots[d].time));
                 if (shared.length) {
-                    showToast(`تعارض: المجموعة "${other.name}" عندها نفس الموعد يوم ${shared.join(' و ')} الساعة ${fmtGroupTime(time)}`, "error");
+                    showToast(`تعارض: المجموعة "${other.name}" عندها نفس الموعد يوم ${shared.join(' و ')} الساعة ${fmtGroupTime(daySlots[shared[0]].time)}`, "error");
                     if (typeof playStatusSound === 'function') playStatusSound('ERROR');
                     return;
                 }
@@ -1759,9 +1825,10 @@ const supabaseClient = window.supabase.createClient(
                         localStorage.setItem('sys_students', JSON.stringify(students));
                     }
                     Object.assign(g, { name, days: daysString, time, endTime, grade });
+                    if (dayTimes) g.dayTimes = dayTimes; else delete g.dayTimes;
                 }
             } else {
-                groups.push({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time, endTime });
+                groups.push(Object.assign({ id: 'GRP-' + Date.now(), name, grade, days: daysString, time, endTime }, dayTimes ? { dayTimes } : {}));
             }
             localStorage.setItem('sys_groups', JSON.stringify(groups));
             closeModal('groupModal');
@@ -1809,7 +1876,7 @@ const supabaseClient = window.supabase.createClient(
             const q = $id('groupStudentsSearch').value.toLowerCase().trim();
             const list = all.filter(s => s.name.toLowerCase().includes(q) || String(s.code).toLowerCase().includes(q));
             $id('gsmTitle').textContent = g.name;
-            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${fmtGroupRange(g)}`;
+            $id('gsmMeta').textContent = `${g.grade} • ${g.days} • ${daySummary(g)}`;
             $id('gsmCount').textContent = all.length;
             $id('gsmBody').innerHTML = list.length ? list.map((s, i) => {
                 const abs = logs.filter(l => l.studentId === s.id && l.status === 'ABSENT').length;
@@ -2049,7 +2116,7 @@ const supabaseClient = window.supabase.createClient(
             tbody.innerHTML = filtered.map(s => {
                 const grp = grpMap.get(s.groupId);
                 const grpName = grp ? grp.name : 'غير محدد';
-                const grpTime = grp ? fmtGroupTime(grp.time) : '';
+                const grpTime = grp ? timeLabel(grp) : '';
                 const latestEval = evalMap[s.id];
                 const evalDisplay = latestEval ? `<span class="font-bold text-blue-600">${esc(latestEval.grade)}</span>` : `<span class="text-slate-400">بدون تقييم</span>`;
                 const absentCount = absMap[s.id] || 0;
@@ -2230,7 +2297,7 @@ const supabaseClient = window.supabase.createClient(
         function updateExamModalGroupSelect() {
             const grade = $id('inputExamTargetGrade').value;
             $id('inputExamTargetGroup').innerHTML = `<option value="ALL">جميع المجموعات</option>` +
-                groupsForGrade(grade).map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${fmtGroupTime(g.time)}</option>`).join('');
+                groupsForGrade(grade).map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${timeLabel(g)}</option>`).join('');
         }
 
         function openAddExamModal() {
@@ -2319,7 +2386,7 @@ const supabaseClient = window.supabase.createClient(
             }
             select.innerHTML = list.map(ex => {
                 const grp = groups.find(g => g.id === ex.targetGroupId);
-                const grpText = grp ? `${grp.name} | ${grp.days || ''} ${fmtGroupTime(grp.time)}` : 'جميع المجموعات';
+                const grpText = grp ? `${grp.name} | ${grp.days || ''} ${timeLabel(grp)}` : 'جميع المجموعات';
                 const gradeText = (ex.targetGrade && ex.targetGrade !== 'ALL') ? ex.targetGrade : 'جميع الصفوف';
                 return `<option value="${ex.id}">${esc(ex.title)} [${esc(gradeText)} - ${esc(grpText)}] (${esc(ex.maxGrade)} د)</option>`;
             }).join('');
@@ -2336,7 +2403,7 @@ const supabaseClient = window.supabase.createClient(
             const previous = groupSelect.value;
             const filteredGroups = groupsForGrade($id('examGradeGradeFilter').value);
             groupSelect.innerHTML = `<option value="ALL">جميع المجموعات</option>` +
-                filteredGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${fmtGroupTime(g.time)}</option>`).join('');
+                filteredGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${timeLabel(g)}</option>`).join('');
             if (filteredGroups.some(g => g.id === previous)) groupSelect.value = previous;
         }
 
@@ -2471,9 +2538,9 @@ const supabaseClient = window.supabase.createClient(
             const prev = sel.value;
             const day = getCurrentArabicDayName();
             const todayGroups = groups.filter(g => (g.days || '').split(',').map(d => d.trim()).includes(day))
-                .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+                .sort((a, b) => (slotOf(a).time || '').localeCompare(slotOf(b).time || ''));
             sel.innerHTML = todayGroups.length
-                ? todayGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${fmtGroupTime(g.time)}</option>`).join('')
+                ? todayGroups.map(g => `<option value="${g.id}">${esc(g.name)} — ${fmtGroupTime(slotOf(g).time)}</option>`).join('')
                 : '<option value="">لا توجد مجموعات اليوم</option>';
             if (todayGroups.some(g => g.id === prev)) sel.value = prev;
         }
@@ -2804,7 +2871,7 @@ const supabaseClient = window.supabase.createClient(
             const prev = sel.value;
             const available = groupsForGrade($id('paymentPlanGrade')?.value || '');
             sel.innerHTML = available.length
-                ? available.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${fmtGroupTime(g.time)}</option>`).join('')
+                ? available.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${timeLabel(g)}</option>`).join('')
                 : '<option value="">لا توجد مجموعات في هذا الصف</option>';
             sel.insertAdjacentHTML('afterbegin', '<option value="ALL">★ كل مجموعات الصف (الصف بالكامل)</option>');
             sel.value = (prev === 'ALL' || available.some(g => g.id === prev)) ? prev : (available.length ? available[0].id : 'ALL');
@@ -2822,7 +2889,7 @@ const supabaseClient = window.supabase.createClient(
             if (!box || !sel) return;
             const g = groups.find(x => x.id === sel.value);
             if (!g) { box.classList.add('hidden'); return; }
-            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${fmtGroupRange(g)}`;
+            box.innerHTML = `<i class="fa-regular fa-clock ml-1"></i> المواعيد: ${esc(g.days || '--')} — الساعة ${daySummary(g)}`;
             box.classList.remove('hidden');
         }
         document.addEventListener('change', function(e) {
@@ -2860,7 +2927,7 @@ const supabaseClient = window.supabase.createClient(
             sel.innerHTML = paymentPlans.length
                 ? paymentPlans.slice().reverse().map(p => {
                     const g = groups.find(x => x.id === p.groupId);
-                    return `<option value="${p.id}">${esc(p.name)} — ${esc(p.amount)} جنيه — ${esc(p.grade)} — ${g ? esc(g.name + ' (' + (g.days || '') + ' ' + fmtGroupTime(g.time) + ')') : (p.groupId === 'ALL' ? 'كل مجموعات الصف' : 'مجموعة محذوفة')}</option>`;
+                    return `<option value="${p.id}">${esc(p.name)} — ${esc(p.amount)} جنيه — ${esc(p.grade)} — ${g ? esc(g.name + ' (' + (g.days || '') + ' ' + timeLabel(g) + ')') : (p.groupId === 'ALL' ? 'كل مجموعات الصف' : 'مجموعة محذوفة')}</option>`;
                 }).join('')
                 : '<option value="">لا توجد مستحقات بعد — أنشئ مستحقًا أولًا</option>';
             if (paymentPlans.some(p => p.id === previous)) sel.value = previous;
@@ -3041,7 +3108,7 @@ const supabaseClient = window.supabase.createClient(
                     "اسم المجموعة": g.name,
                     "الصف الدراسي": g.grade || '--',
                     "الأيام": g.days || '--',
-                    "الموعد": fmtGroupTime(g.time),
+                    "الموعد": daySummary(g),
                     "عدد الطلاب": students.filter(s => s.groupId === g.id).length
                 })), "المجموعات");
 
@@ -3448,7 +3515,7 @@ const supabaseClient = window.supabase.createClient(
 
         // ===== حصص اليوم + تذكير قبل الموعد بـ 5 دقائق =====
         const REMIND_BEFORE_MIN = 5;
-        const startMin = g => { const [h, m] = String(g.time || '').split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
+        const startMin = g => { const [h, m] = String(slotOf(g).time || '').split(':').map(Number); return isNaN(h) ? null : h * 60 + (m || 0); };
         function todayClasses() {
             const day = normDay(getCurrentArabicDayName());
             return groups.filter(g => String(g.days || '').split(/[,،]/).map(normDay).includes(day) && startMin(g) !== null).sort((a, b) => startMin(a) - startMin(b));
@@ -3463,7 +3530,7 @@ const supabaseClient = window.supabase.createClient(
                     : d > REMIND_BEFORE_MIN ? '<span class="px-2 py-0.5 bg-blue-50 text-blue-700 rounded-full font-bold">قادمة</span>'
                     : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
                     : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
-                return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(g)} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
+                return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(forDay(g))} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
             }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
         }
         function checkClassReminders() {
@@ -3476,7 +3543,7 @@ const supabaseClient = window.supabase.createClient(
                 const d = startMin(g) - nowMin;
                 if (d <= 0 || d > REMIND_BEFORE_MIN || done.ids.includes(g.id)) return;
                 done.ids.push(g.id);
-                const msg = `عندك حصة بعد ${d} ${d === 1 ? 'دقيقة' : 'دقائق'} — ${g.grade || ''} — ${g.name} — الساعة ${fmtGroupTime(g.time)}`;
+                const msg = `عندك حصة بعد ${d} ${d === 1 ? 'دقيقة' : 'دقائق'} — ${g.grade || ''} — ${g.name} — الساعة ${fmtGroupTime(slotOf(g).time)}`;
                 $id('classReminderText').textContent = msg;
                 $id('classReminder').classList.remove('hidden');
                 playStatusSound('LATE');
@@ -3489,7 +3556,7 @@ const supabaseClient = window.supabase.createClient(
                 const w = groupWindow(g);
                 if (!w || nowMin < w.open || nowMin >= w.start || done.open.includes(g.id)) return;
                 done.open.push(g.id);
-                const msg = `تم فتح تسجيل الحضور لمجموعة ${g.name}${g.grade ? ' — ' + g.grade : ''} — موعد الحصة ${fmtGroupTime(g.time)}`;
+                const msg = `تم فتح تسجيل الحضور لمجموعة ${g.name}${g.grade ? ' — ' + g.grade : ''} — موعد الحصة ${fmtGroupTime(slotOf(g).time)}`;
                 $id('checkinOpenText').textContent = msg;
                 $id('checkinOpen').classList.remove('hidden');
                 playStatusSound('PRESENT');
