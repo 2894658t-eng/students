@@ -156,7 +156,7 @@
         .qrcard-grade { font-size: 3.7cqw; font-weight: 700; color: #f5a623; margin-top: 2.4cqw; line-height: 1.4; }
         .qrcard-group { font-size: 3.6cqw; font-weight: 500; color: #bfdbfe; margin-top: 2cqw; line-height: 1.4; }
         .qrcard-box { background: #ffffff; border-radius: 5cqw; margin-top: 5.5cqw; padding: 3.8cqw 0 3cqw; display: flex; flex-direction: column; align-items: center; }
-        #cardQrCode { width: 36cqw; height: 36cqw; }
+        #cardQrCode { width: 44cqw; height: 44cqw; }
         #cardQrCode img, #cardQrCode canvas { width: 100% !important; height: 100% !important; display: block; }
         .qrcard-code { font-size: 3.1cqw; font-weight: 700; color: #b6c3da; margin-top: 2.2cqw; letter-spacing: .06em; line-height: 1.4; }
         .qrcard-foot { border-top: 1px solid rgba(255,255,255,.2); margin-top: 4.5cqw; padding-top: 3.5cqw; }
@@ -3211,7 +3211,7 @@ const supabaseClient = window.supabase.createClient(
             do { ctx.font = weight + ' ' + s + 'px ' + family; s -= 0.5; } while (ctx.measureText(text).width > maxW && s > 8);
         }
         async function buildStudentCardCanvas(s) {
-            const K = 3, u = v => v * K, M = 20, CW = 420, CH = 572;   // وحدة التصميم 420 عرض البطاقة × 3 دقة
+            const K = 3, u = v => v * K, M = 20, CW = 420, CH = 612;   // وحدة التصميم 420 عرض البطاقة × 3 دقة
             const W = u(CW + M * 2), H = u(CH + M * 2), OX = u(M), OY = u(M);
             const grp = groups.find(g => g.id === s.groupId);
             try { await Promise.all(['400', '500', '700', '800'].map(w => document.fonts.load(w + ' 40px Cairo'))); } catch (e) {}
@@ -3234,8 +3234,8 @@ const supabaseClient = window.supabase.createClient(
             const gname = grp ? grp.name : '--';
             ctx.fillStyle = '#bfdbfe'; _fitText(ctx, gname, '500', u(15), maxW, fam); ctx.fillText(gname, cx, OY + u(236));
             // الصندوق الأبيض + QR + الكود
-            _rrect(ctx, OX + u(22), OY + u(264), u(376), u(202), u(20)); ctx.fillStyle = '#ffffff'; ctx.fill();
-            const QS = u(150), tmp = document.createElement('div');
+            _rrect(ctx, OX + u(22), OY + u(264), u(376), u(242), u(20)); ctx.fillStyle = '#ffffff'; ctx.fill();
+            const QS = u(185), tmp = document.createElement('div');
             tmp.style.cssText = 'position:fixed;left:-9999px;top:0';
             document.body.appendChild(tmp);
             try {
@@ -3247,16 +3247,16 @@ const supabaseClient = window.supabase.createClient(
             } finally { tmp.remove(); }
             ctx.direction = 'ltr'; ctx.fillStyle = '#b6c3da'; ctx.font = '700 ' + u(13) + 'px ' + fam;
             if (ctx.letterSpacing !== undefined) ctx.letterSpacing = u(0.8) + 'px';
-            ctx.fillText(String(s.code), cx, OY + u(449));
+            ctx.fillText(String(s.code), cx, OY + u(484));
             if (ctx.letterSpacing !== undefined) ctx.letterSpacing = '0px';
             // الفوتر
-            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(OX + u(22), OY + u(485), u(376), K);
+            ctx.fillStyle = 'rgba(255,255,255,0.2)'; ctx.fillRect(OX + u(22), OY + u(525), u(376), K);
             ctx.direction = 'rtl'; ctx.fillStyle = '#f5a623'; ctx.font = '800 ' + u(15) + 'px ' + fam;
-            ctx.fillText('سنتر مستر أحمد جابر', cx, OY + u(505));
+            ctx.fillText('سنتر مستر أحمد جابر', cx, OY + u(545));
             ctx.fillStyle = '#dbeafe'; ctx.font = '500 ' + u(11.5) + 'px ' + fam;
-            ctx.fillText('هيكلة وتصميم م. إبراهيم عبد الراضي', cx, OY + u(526));
+            ctx.fillText('هيكلة وتصميم م. إبراهيم عبد الراضي', cx, OY + u(566));
             ctx.direction = 'ltr'; ctx.font = '500 ' + u(11.5) + 'px monospace';
-            ctx.fillText('01155121562', cx, OY + u(544));
+            ctx.fillText('01155121562', cx, OY + u(584));
             return c;
         }
         async function downloadStudentQR() {
