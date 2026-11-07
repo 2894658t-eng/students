@@ -1123,6 +1123,14 @@ const supabaseClient = window.supabase.createClient(
 );
         // تاريخ اليوم بالتوقيت المحلي (toISOString بيرجّع UTC وبيغلّط التاريخ بعد منتصف الليل)
         const _cairoDateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' });
+        // كل الحسابات الزمنية بتوقيت القاهرة بغض النظر عن توقيت الجهاز
+        const _cairoTimeFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+        const _cairoWdFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'Africa/Cairo', weekday: 'short' });
+        function cairoNowMin(d) {
+            const p = {}; _cairoTimeFmt.formatToParts(d || new Date()).forEach(x => { p[x.type] = x.value; });
+            return (Number(p.hour) % 24) * 60 + Number(p.minute);
+        }
+        function cairoDayIndex(d) { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(_cairoWdFmt.format(d || new Date())); }
         // التاريخ دايماً بتوقيت القاهرة بغض النظر عن ساعة جهاز المستخدم
         function localDate(d) {
             d = d || new Date();
@@ -1319,7 +1327,7 @@ const supabaseClient = window.supabase.createClient(
         };
 
         function getCurrentArabicDayName() {
-            const dayIndex = new Date().getDay();
+            const dayIndex = cairoDayIndex();
             return ARABIC_DAYS_MAP[dayIndex];
         }
 
@@ -1547,7 +1555,7 @@ const supabaseClient = window.supabase.createClient(
         function getAutoCurrentGroup(todayGroups) {
             if (!todayGroups.length) return null;
             const sorted = todayGroups.slice().sort((a, b) => (slotOf(a).time || '').localeCompare(slotOf(b).time || ''));
-            const nowMin = new Date().getHours() * 60 + new Date().getMinutes();
+            const nowMin = cairoNowMin();
             const toMin = t => { const [h, m] = (t || '0:0').split(':').map(Number); return h * 60 + (m || 0); };
             let cur = null;
             sorted.forEach(g => { if (toMin(slotOf(g).time) <= nowMin) cur = g; });
@@ -1595,6 +1603,10 @@ const supabaseClient = window.supabase.createClient(
             String(g.days || '').split(/[,،]/).map(d => d.trim()).filter(Boolean).forEach(d => { const t = fmtGroupTime(slotOf(g, d).time); if (!seen.includes(t)) seen.push(t); });
             return seen.join(' / ');
         }
+        // اسم المجموعة + أيامها ومواعيدها (للجداول)
+        function grpCell(g) {
+            return g ? esc(g.name) + '<span class="block text-[10px] font-normal text-[#64748B]">' + esc(g.days || '') + ' \u2022 ' + timeLabel(g) + '</span>' : '--';
+        }
         function renderPerDayTimes(preset) {
             const box = $id('perDayTimes');
             if (!box) return;
@@ -1640,7 +1652,7 @@ const supabaseClient = window.supabase.createClient(
             // الغياب = طلاب المجموعة − (الحاضرين + المتأخرين): كل ما طالب يسجل الغياب يقل والحضور يزيد
             // ولا يبدأ احتساب الغياب إلا بعد مرور 15 دقيقة على موعد بداية الحصة
             const _w = chosen ? groupWindow(chosen) : null;
-            const _nowM = new Date().getHours() * 60 + new Date().getMinutes();
+            const _nowM = cairoNowMin();
             const absentCount = (_w && _nowM >= _w.absentFrom) ? Math.max(0, groupStudents.length - (presentCount + lateCount)) : 0;
 
             const info = $id('dashGroupInfo');
@@ -1676,9 +1688,9 @@ const supabaseClient = window.supabase.createClient(
 
             const days = [], counts = [];
             for (let i = 6; i >= 0; i--) {
-                const d = new Date(); d.setDate(d.getDate() - i);
+                const d = new Date(Date.now() - i * 864e5);
                 const dStr = localDate(d);
-                days.push(d.toLocaleDateString(LOC(), { weekday: 'short' }));
+                days.push(d.toLocaleDateString(LOC(), { weekday: 'short', timeZone: 'Africa/Cairo' }));
                 counts.push(logs.filter(l => l.date === dStr && (l.status === 'PRESENT' || l.status === 'LATE')).length);
             }
 
@@ -2177,7 +2189,7 @@ const supabaseClient = window.supabase.createClient(
             if (!($id('scanOverride') && $id('scanOverride').checked)) {
                 const w = groupWindow(autoGroup);
                 const nd = new Date();
-                const nowMin = nd.getHours() * 60 + nd.getMinutes();
+                const nowMin = cairoNowMin(nd);
                 const fmtMin = m => fmtGroupTime(String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'));
                 if (w && nowMin < w.open) {
                     playStatusSound('ERROR');
@@ -2189,7 +2201,8 @@ const supabaseClient = window.supabase.createClient(
                     showToast(`التسجيل لم يبدأ — يفتح الساعة ${fmtMin(w.open)}`, 'error');
                     return;
                 }
-                if (w && nowMin >= w.absentFrom) {
+                const _ex = logs.find(l => l.studentId === student.id && l.date === localDate());
+                if (w && nowMin >= w.absentFrom && (!_ex || _ex.status === 'ABSENT')) {
                     playStatusSound('ERROR');
                     document.getElementById('scanResultBox').innerHTML = `
                         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-clock"></i></div>
@@ -2205,7 +2218,7 @@ const supabaseClient = window.supabase.createClient(
 
 
             const today = localDate();
-            const timeNow = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+            const timeNow = new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' });
             const ts = new Date().toISOString();
 
             let existingLog = logs.find(l => l.studentId === student.id && l.date === today);
@@ -2637,7 +2650,7 @@ const supabaseClient = window.supabase.createClient(
                     <td class="p-3.5 font-bold ex-rank"></td>
                     <td class="p-3.5 font-bold text-[#0F172A]">${esc(s.name)}</td>
                     <td class="p-3.5 font-bold text-amber-600">${esc(gradeOf(s))}</td>
-                    <td class="p-3.5 text-slate-600">${esc(grp ? grp.name : '--')}</td>
+                    <td class="p-3.5 text-slate-600">${grpCell(grp)}</td>
                     <td class="p-3.5">
                         <input type="number" min="0" max="${currentExam.maxGrade}" step="any" data-sid="${s.id}" value="${score === null ? '' : score}" placeholder="—" onchange="saveStudentScore('${examId}', '${s.id}', this.value)" class="w-20 p-1.5 border border-[#E2E8F0] rounded-lg font-bold text-center outline-none focus:ring-1 focus:ring-[#2563EB]">
                     </td>
@@ -2761,8 +2774,8 @@ const supabaseClient = window.supabase.createClient(
             try {
                 await refreshTodayLogs(true);
                 const today = localDate(), day = normDay(getCurrentArabicDayName());
-                const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
-                const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' });
+                const now = new Date(), nowMin = cairoNowMin(now);
+                const timeStr = now.toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit', timeZone: 'Africa/Cairo' });
                 const seen = new Set(logs.filter(l => l.date === today).map(l => l.studentId)), rows = [];
                 groups.forEach(g => {
                     if (onlyGroupId && g.id !== onlyGroupId) return;
@@ -2902,11 +2915,11 @@ const supabaseClient = window.supabase.createClient(
                 return;
             }
 
-            select.innerHTML = filteredStudents.map(s => { const g = groups.find(x => x.id === s.groupId); return `<option value="${s.id}">${esc(s.name)} (${esc(gradeOf(s))}${g ? ' - ' + esc(g.name) : ''}) - ID: ${esc(s.code)}</option>`; }).join('');
+            select.innerHTML = filteredStudents.map(s => { const g = groups.find(x => x.id === s.groupId); return `<option value="${s.id}">${esc(s.name)} (${esc(gradeOf(s))}${g ? ' - ' + esc(g.name) + ' ' + timeLabel(g) : ''}) - ID: ${esc(s.code)}</option>`; }).join('');
         }
 
         let currentReport = null;
-        const monthLabel = m => m ? new Date(m + '-01').toLocaleDateString(LOC(), { month: 'long', year: 'numeric' }) : 'كل الفترات (تراكمي)';
+        const monthLabel = m => m ? new Date(m + '-01').toLocaleDateString(LOC(), { month: 'long', year: 'numeric', timeZone: 'UTC' }) : 'كل الفترات (تراكمي)';
         const inMonth = (d, m) => !m || String(d || '').startsWith(m);
         const byDateDesc = (a, b) => String(b.date || '').localeCompare(String(a.date || ''));
 
@@ -3002,7 +3015,7 @@ const supabaseClient = window.supabase.createClient(
                         <h2 class="text-xl font-black text-[#0F172A]">تقرير الطالب الشامل — ${monthLabel(month)}</h2>
                         <p class="text-xs text-[#64748B]">الحضور والغياب • الدرجات • التقييمات • المدفوعات</p>
                     </div>
-                    <div class="text-left font-mono text-xs"><p class="font-bold text-[#2563EB]">${new Date().toLocaleDateString('ar-EG')}</p></div>
+                    <div class="text-left font-mono text-xs"><p class="font-bold text-[#2563EB]">${new Date().toLocaleDateString('ar-EG', { timeZone: 'Africa/Cairo' })}</p></div>
                 </div>
 
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs bg-[#F1F5F9] p-4 rounded-xl border border-[#E2E8F0]">
@@ -3147,8 +3160,8 @@ const supabaseClient = window.supabase.createClient(
         }
         // ===== إيصال سداد (مقاس 80mm زي إيصالات فوري) =====
         function newReceiptNo() {
-            const d = new Date(), p = n => String(n).padStart(2, '0');
-            return 'R' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+            const ld = localDate(), p = n => String(n).padStart(2, '0');
+            return 'R' + ld.slice(2, 4) + ld.slice(5, 7) + ld.slice(8, 10) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
         }
         function printReceipt(planId, studentId) {
             const st = students.find(x => x.id === studentId), plan = paymentPlans.find(p => p.id === planId), rec = getPaymentRecord(planId, studentId);
@@ -3632,7 +3645,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
         const ABS_LIST_MIN = 3;   // أكثر من مرتين = 3 مرات فأكثر
         function openAbsModal() { $id('absGrade').value = 'ALL'; $id('absPeriod').value = 'ALL'; $id('absSearch').value = ''; fillAbsGroups(); renderAbsList(); $id('absModal').classList.remove('hidden'); }
         function fillAbsGroups() {
-            $id('absGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('absGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+            $id('absGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('absGrade').value).map(g => `<option value="${g.id}">${esc(g.name)} \u2014 ${esc(g.days || '')} \u2014 ${timeLabel(g)}</option>`).join('');
         }
         function absListRows() {
             const gr = $id('absGrade').value, gp = $id('absGroup').value, per = $id('absPeriod').value, q = $id('absSearch').value.toLowerCase().trim();
@@ -3660,7 +3673,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             $id('absSummary').textContent = `${rows.length} طالب غابوا ${ABS_LIST_MIN} مرات أو أكثر`;
             $id('absBody').innerHTML = rows.length ? rows.map((r, i) => {
                 const g = groups.find(x => x.id === r.st.groupId);
-                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5"><span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">${r.dates.length}</span></td><td class="p-2.5 font-mono text-[#64748B]">${r.dates.map(esc).join('، ')}</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendAbsListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
+                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5"><span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">${r.dates.length}</span></td><td class="p-2.5 font-mono text-[#64748B]">${r.dates.map(esc).join('، ')}</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendAbsListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
             }).join('') : '<tr><td colspan="7" class="p-6 text-center text-[#64748B]">لا يوجد طلاب غابوا أكثر من مرتين 🎉</td></tr>';
         }
         function sendAbsListOne(i) {
@@ -3682,7 +3695,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             fillLowGroups(); renderLowList();
         }
         function fillLowGroups() {
-            $id('lowGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('lowGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+            $id('lowGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('lowGrade').value).map(g => `<option value="${g.id}">${esc(g.name)} \u2014 ${esc(g.days || '')} \u2014 ${timeLabel(g)}</option>`).join('');
         }
         function lowListRows() {
             const gr = $id('lowGrade').value, gp = $id('lowGroup').value, exId = $id('lowExam').value, q = $id('lowSearch').value.toLowerCase().trim();
@@ -3710,7 +3723,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             $id('lowSummary').textContent = `${new Set(rows.map(r => r.st.id)).size} طالب — ${rows.length} درجة أقل من النصف`;
             $id('lowBody').innerHTML = rows.length ? rows.map((r, i) => {
                 const g = groups.find(x => x.id === r.st.groupId);
-                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5">${esc(r.ex.title)}</td><td class="p-2.5 font-mono font-bold">${r.score} / ${r.max}</td><td class="p-2.5 font-bold text-rose-600">${r.pct}%</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendLowListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
+                return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5">${esc(r.ex.title)}</td><td class="p-2.5 font-mono font-bold">${r.score} / ${r.max}</td><td class="p-2.5 font-bold text-rose-600">${r.pct}%</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendLowListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
             }).join('') : '<tr><td colspan="8" class="p-6 text-center text-[#64748B]">لا يوجد طلاب أقل من نصف الدرجة 🎉</td></tr>';
         }
         function sendLowListOne(i) {
@@ -3798,7 +3811,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             body.innerHTML = rows.map(r => {
                 const g = groups.find(x => x.id === r.s.groupId);
                 return `<tr><td class="p-2.5"><span class="w-7 h-7 rounded-full inline-flex items-center justify-center ${medal(r.rank)}">${r.rank}</span></td>` +
-                    `<td class="p-2.5 font-bold text-[#0F172A]">${esc(r.s.name)}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td>` +
+                    `<td class="p-2.5 font-bold text-[#0F172A]">${esc(r.s.name)}</td><td class="p-2.5">${grpCell(g)}</td>` +
                     `<td class="p-2.5 font-mono font-bold">${r.n === 1 ? `${f(r.score)} / ${f(r.max)}` : `${r.n} امتحانات (${f(r.score)} / ${f(r.max)})`}</td>` +
                     `<td class="p-2.5 font-bold ${r.pct >= 50 ? 'text-emerald-600' : 'text-rose-600'}">${f(r.pct)}%</td></tr>`;
             }).join('');
@@ -3807,7 +3820,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
         // ===== المتخلفون عن الدفع + إيصال السداد =====
         function openUnpaidModal() { $id('unpGrade').value = 'ALL'; $id('unpSearch').value = ''; fillUnpGroups(); renderUnpaid(); $id('unpaidModal').classList.remove('hidden'); }
         function fillUnpGroups() {
-            $id('unpGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('unpGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
+            $id('unpGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('unpGrade').value).map(g => `<option value="${g.id}">${esc(g.name)} \u2014 ${esc(g.days || '')} \u2014 ${timeLabel(g)}</option>`).join('');
         }
         function unpaidRows() {
             const gr = $id('unpGrade').value, gp = $id('unpGroup').value, q = $id('unpSearch').value.toLowerCase().trim(), rows = [];
@@ -3826,7 +3839,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             $id('unpSummary').textContent = `${new Set(rows.map(r => r.st.id)).size} طالب — ${rows.length} مستحق — إجمالي المتبقي ${fmt(rows.reduce((a, r) => a + r.rem, 0))} جنيه`;
             $id('unpBody').innerHTML = rows.length ? rows.map(({ st, plan, paid, rem }) => {
                 const g = groups.find(x => x.id === st.groupId);
-                return `<tr><td class="p-2.5 font-bold">${esc(st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(st.code)}</td><td class="p-2.5">${esc(gradeOf(st))}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td><td class="p-2.5">${esc(plan.name)}</td><td class="p-2.5">${fmt(plan.amount)}</td><td class="p-2.5">${fmt(paid)}</td><td class="p-2.5 font-black text-rose-600">${fmt(rem)} جنيه</td><td class="p-2.5">${esc(plan.dueDate || '--')}</td>
+                return `<tr><td class="p-2.5 font-bold">${esc(st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(st.code)}</td><td class="p-2.5">${esc(gradeOf(st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5">${esc(plan.name)}</td><td class="p-2.5">${fmt(plan.amount)}</td><td class="p-2.5">${fmt(paid)}</td><td class="p-2.5 font-black text-rose-600">${fmt(rem)} جنيه</td><td class="p-2.5">${esc(plan.dueDate || '--')}</td>
                     <td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','parent')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg ml-1"><i class="fa-brands fa-whatsapp ml-1"></i>ولي الأمر</button><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','student')" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>الطالب</button></td></tr>`;
             }).join('') : '<tr><td colspan="10" class="p-6 text-center text-[#64748B]">لا يوجد متخلفون عن الدفع 🎉</td></tr>';
         }
@@ -3862,7 +3875,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
         }
         function renderTodayClasses() {
             const box = $id('todayClassesList'); if (!box) return;
-            const list = todayClasses(), now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes();
+            const list = todayClasses(), now = new Date(), nowMin = cairoNowMin(now);
             $id('todayClassesCount').textContent = list.length;
             box.innerHTML = list.length ? list.map(g => {
                 const d = startMin(g) - nowMin, n = students.filter(s => s.groupId === g.id).length;
@@ -3875,7 +3888,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
         }
         function checkClassReminders() {
             if (!cloudReady) return;
-            const now = new Date(), nowMin = now.getHours() * 60 + now.getMinutes(), today = localDate();
+            const now = new Date(), nowMin = cairoNowMin(now), today = localDate();
             let done = {};
             try { done = JSON.parse(localStorage.getItem('remind_done') || '{}'); } catch (e) {}
             if (done.date !== today) done = { date: today, ids: [] };
