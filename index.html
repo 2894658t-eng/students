@@ -3739,7 +3739,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             $id('absBody').innerHTML = rows.length ? rows.map((r, i) => {
                 const g = groups.find(x => x.id === r.st.groupId);
                 return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5"><span class="px-2.5 py-1 rounded-full bg-rose-100 text-rose-800 font-bold">${r.dates.length}</span></td><td class="p-2.5 font-mono text-[#64748B]">${r.dates.map(esc).join('، ')}</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendAbsListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
-            }).join('') : '<tr><td colspan="7" class="p-6 text-center text-[#64748B]">لا يوجد طلاب غابوا أكثر من مرتين 🎉</td></tr>';
+            }).join('') : '<tr><td colspan="7" class="p-6 text-center text-[#64748B]">لا يوجد طلاب غابوا أكثر من مرتين</td></tr>';
         }
         function sendAbsListOne(i) {
             const r = (window._absRows || [])[i]; if (!r) return;
@@ -3789,7 +3789,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             $id('lowBody').innerHTML = rows.length ? rows.map((r, i) => {
                 const g = groups.find(x => x.id === r.st.groupId);
                 return `<tr><td class="p-2.5 font-bold">${esc(r.st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(r.st.code)}</td><td class="p-2.5">${esc(gradeOf(r.st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5">${esc(r.ex.title)}</td><td class="p-2.5 font-mono font-bold">${r.score} / ${r.max}</td><td class="p-2.5 font-bold text-rose-600">${r.pct}%</td><td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendLowListOne(${i})" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>إرسال</button></td></tr>`;
-            }).join('') : '<tr><td colspan="8" class="p-6 text-center text-[#64748B]">لا يوجد طلاب أقل من نصف الدرجة 🎉</td></tr>';
+            }).join('') : '<tr><td colspan="8" class="p-6 text-center text-[#64748B]">لا يوجد طلاب أقل من نصف الدرجة </td></tr>';
         }
         function sendLowListOne(i) {
             const r = (window._lowRows || [])[i]; if (!r) return;
@@ -3906,7 +3906,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
                 const g = groups.find(x => x.id === st.groupId);
                 return `<tr><td class="p-2.5 font-bold">${esc(st.name)}</td><td class="p-2.5 font-mono font-bold text-[#2563EB]">${esc(st.code)}</td><td class="p-2.5">${esc(gradeOf(st))}</td><td class="p-2.5">${grpCell(g)}</td><td class="p-2.5">${esc(plan.name)}</td><td class="p-2.5">${fmt(plan.amount)}</td><td class="p-2.5">${fmt(paid)}</td><td class="p-2.5 font-black text-rose-600">${fmt(rem)} جنيه</td><td class="p-2.5">${esc(plan.dueDate || '--')}</td>
                     <td class="p-2.5 text-center whitespace-nowrap"><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','parent')" class="px-2.5 py-1.5 bg-emerald-600 text-white font-bold rounded-lg ml-1"><i class="fa-brands fa-whatsapp ml-1"></i>ولي الأمر</button><button onclick="sendUnpaidMsg('${plan.id}','${st.id}','student')" class="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i>الطالب</button></td></tr>`;
-            }).join('') : '<tr><td colspan="10" class="p-6 text-center text-[#64748B]">لا يوجد متخلفون عن الدفع 🎉</td></tr>';
+            }).join('') : '<tr><td colspan="10" class="p-6 text-center text-[#64748B]">لا يوجد متخلفون عن الدفع </td></tr>';
         }
         const phoneFor = (st, who) => who === 'student' ? (st.studentPhone || st.phone) : (st.parentPhone || st.phone);
         const unpMsg = (st, plan, who) => { const m = paymentMsg(st, plan).msg; return who === 'student' ? m.replace('ولي أمر الطالب/ة:', 'الطالب/ة:') : m; };
@@ -3927,7 +3927,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             const phone = formatWaPhone(phoneFor(st, who));
             if (!phone) { showToast('الرقم غير متاح', 'error'); return; }
             const rec = getPaymentRecord(planId, stId), paid = paidAmountOf(plan, rec), rem = Math.max(0, Number(plan.amount) - paid);
-            const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n${who === 'student' ? 'الطالب/ة' : 'ولي أمر الطالب/ة'}: *${st.name}*\n\n✅ تم استلام دفعة بخصوص: *${plan.name}*\n💰 *المطلوب:* ${plan.amount} جنيه\n✅ *المدفوع:* ${paid} جنيه\n🔻 *المتبقي:* ${rem} جنيه${rec && rec.paidDate ? '\n📅 *تاريخ السداد:* ' + rec.paidDate : ''}\n\n${rem === 0 ? '🎉 تم سداد المبلغ كاملاً، شكراً لكم' : 'نرجو سداد المتبقي في أقرب وقت، وشكراً لتعاونكم'} 🌟`;
+            const msg = `السلام عليكم ورحمة الله وبركاته 🌷\n${who === 'student' ? 'الطالب/ة' : 'ولي أمر الطالب/ة'}: *${st.name}*\n\n✅ تم استلام دفعة بخصوص: *${plan.name}*\n💰 *المطلوب:* ${plan.amount} جنيه\n✅ *المدفوع:* ${paid} جنيه\n🔻 *المتبقي:* ${rem} جنيه${rec && rec.paidDate ? '\n📅 *تاريخ السداد:* ' + rec.paidDate : ''}\n\n${rem === 0 ? ' تم سداد المبلغ كاملاً، شكراً لكم' : 'نرجو سداد المتبقي في أقرب وقت، وشكراً لتعاونكم'} 🌟`;
             window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(msg), '_blank');
         }
 
@@ -3949,7 +3949,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
                     : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
                     : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
                 return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(forDay(g))} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
-            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
+            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم </div>';
         }
         function checkClassReminders() {
             if (!cloudReady) return;
