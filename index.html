@@ -120,9 +120,9 @@
         }
 
         @media print {
-            body * { visibility: hidden; }
-            #printableArea, #printableArea *, #cardPrintArea, #cardPrintArea *, #reportPrintArea, #reportPrintArea * {
-                visibility: visible;
+            /* نخفي أي عنصر في الصفحة بـ display:none ما عدا مناطق الطباعة وأجدادها (عشان ما يظهرش صفحات بيضاء زيادة) */
+            body *:not(#printableArea):not(#printableArea *):not(#cardPrintArea):not(#cardPrintArea *):not(#reportPrintArea):not(#reportPrintArea *):not(:has(#printableArea)):not(:has(#cardPrintArea)):not(:has(#reportPrintArea)) {
+                display: none !important;
             }
             #printableArea, #cardPrintArea, #reportPrintArea {
                 position: absolute; left: 0; top: 0; width: 100%;
@@ -429,8 +429,8 @@
                         <p class="text-xs text-[#64748B]">اختر الكويز لعرض الطلاب المخصصين له وإدخال درجاتهم بسهولة</p>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <button onclick="openLowModal()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
-                            <i class="fa-solid fa-arrow-trend-down"></i> الطلاب أقل من نصف الدرجة
+                        <button onclick="openTopModal()" class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
+                            <i class="fa-solid fa-ranking-star"></i> الأوائل وأقل من النصف
                         </button>
                         <button onclick="openAddExamModal()" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-file-pen"></i> إضافة امتحان جديد
@@ -971,12 +971,40 @@
         </div>
     </div>
 
-    <div id="lowModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[80] flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-3 text-xs max-h-[92vh] flex flex-col">
+    <!-- MODAL: الأوائل وأقل من نصف الدرجة (نافذة واحدة بتبويبين) -->
+    <div id="topModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[80] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-[#E2E8F0] space-y-3 text-xs max-h-[92vh] overflow-y-auto">
             <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
-                <h3 class="font-bold text-[#0F172A] text-sm"><i class="fa-solid fa-arrow-trend-down text-rose-600 ml-1"></i> الطلاب الحاصلون على أقل من نصف درجة الامتحان</h3>
-                <button onclick="closeModal('lowModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <h3 class="font-bold text-[#0F172A] text-sm"><i class="fa-solid fa-ranking-star text-amber-500 ml-1"></i> الأوائل وأقل من نصف الدرجة</h3>
+                <button onclick="closeModal('topModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
+            <div class="flex gap-2">
+                <button id="topTabTop" onclick="switchTopTab('top')" class="px-4 py-2 rounded-xl font-bold"><i class="fa-solid fa-trophy ml-1"></i> ترتيب الأوائل على الصف</button>
+                <button id="topTabLow" onclick="switchTopTab('low')" class="px-4 py-2 rounded-xl font-bold"><i class="fa-solid fa-arrow-trend-down ml-1"></i> الطلاب أقل من نصف الدرجة</button>
+            </div>
+            <div id="topPane" class="space-y-3">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <select id="topGrade" onchange="fillTopExams(); renderTopList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none">
+                    <option value="الصف الأول الثانوي">الصف الأول الثانوي</option>
+                    <option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option>
+                    <option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option>
+                </select>
+                <select id="topExam" onchange="renderTopList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none text-[#2563EB]"></select>
+                <select id="topLimit" onchange="renderTopList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none">
+                    <option value="3">أول 3</option>
+                    <option value="10" selected>أول 10</option>
+                    <option value="20">أول 20</option>
+                    <option value="0">الكل</option>
+                </select>
+            </div>
+            <div class="bg-amber-50 border border-amber-100 rounded-xl p-3 font-bold text-amber-800" id="topSummary"></div>
+            <div class="overflow-auto max-h-[52vh] border border-[#E2E8F0] rounded-xl">
+                <table class="w-full text-right"><thead class="bg-[#F1F5F9] text-[#64748B] font-bold sticky top-0"><tr><th class="p-2.5">الترتيب</th><th class="p-2.5">الطالب</th><th class="p-2.5">المجموعة</th><th class="p-2.5">الدرجة</th><th class="p-2.5">النسبة</th></tr></thead>
+                <tbody id="topBody" class="divide-y divide-[#E2E8F0]"></tbody></table>
+            </div>
+            <p class="text-[#64748B]">الترتيب بالنسبة المئوية (الدرجة ÷ الدرجة النهائية) عشان الامتحانات المختلفة تتقارن صح، والتعادل بياخد نفس الترتيب.</p>
+            </div>
+            <div id="lowPane" class="space-y-3 hidden">
             <div class="grid grid-cols-1 sm:grid-cols-4 gap-2">
                 <select id="lowGrade" onchange="fillLowGroups(); renderLowList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select>
                 <select id="lowGroup" onchange="renderLowList()" class="p-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl font-bold outline-none"></select>
@@ -990,9 +1018,30 @@
                     <button onclick="bulkLowListSend()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg"><i class="fa-brands fa-whatsapp ml-1"></i> إرسال جماعي للقائمة</button>
                 </div>
             </div>
-            <div class="overflow-auto border border-[#E2E8F0] rounded-xl">
+            <div class="overflow-auto max-h-[52vh] border border-[#E2E8F0] rounded-xl">
                 <table class="w-full text-right"><thead class="bg-[#F1F5F9] text-[#64748B] font-bold sticky top-0"><tr><th class="p-2.5">الطالب</th><th class="p-2.5">الكود (ID)</th><th class="p-2.5">الصف</th><th class="p-2.5">المجموعة</th><th class="p-2.5">الامتحان</th><th class="p-2.5">الدرجة</th><th class="p-2.5">النسبة</th><th class="p-2.5 text-center">واتساب</th></tr></thead>
                 <tbody id="lowBody" class="divide-y divide-[#E2E8F0]"></tbody></table>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: حذف مجموعة (اختيار مصير الطلاب) -->
+    <div id="deleteGroupModal" class="fixed inset-0 bg-[#172554]/60 backdrop-blur-sm z-[85] flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto p-6 shadow-2xl border border-[#E2E8F0] space-y-4 text-xs">
+            <div class="flex justify-between items-center border-b border-[#E2E8F0] pb-3">
+                <h3 id="dgTitle" class="font-bold text-[#0F172A] text-sm"></h3>
+                <button onclick="closeModal('deleteGroupModal')" class="text-[#64748B]"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <div id="dgInfo" class="bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl p-3 space-y-1 font-bold text-[#475569]"></div>
+            <div class="space-y-2">
+                <button onclick="confirmDeleteGroup(false)" class="w-full p-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-800 font-bold text-right">
+                    <i class="fa-solid fa-user-slash ml-1"></i> حذف المجموعة فقط<span class="block font-normal mt-1">الطلاب يفضلوا موجودين بدرجاتهم ومدفوعاتهم لكن من غير مجموعة لحد ما تنقلهم.</span>
+                </button>
+                <button id="dgWithStudentsBtn" onclick="confirmDeleteGroup(true)" class="w-full p-3 rounded-xl bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold text-right">
+                    <i class="fa-solid fa-trash-can ml-1"></i> حذف المجموعة مع الطلاب وكل بياناتهم<span class="block font-normal mt-1">حذف نهائي للطلاب + الحضور + التقييمات + الدرجات + المدفوعات.</span>
+                </button>
+                <button onclick="closeModal('deleteGroupModal')" class="w-full p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">إلغاء</button>
             </div>
         </div>
     </div>
@@ -1073,7 +1122,14 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
         // تاريخ اليوم بالتوقيت المحلي (toISOString بيرجّع UTC وبيغلّط التاريخ بعد منتصف الليل)
-        function localDate(d) { d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+        const _cairoDateFmt = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Cairo', year: 'numeric', month: '2-digit', day: '2-digit' });
+        // التاريخ دايماً بتوقيت القاهرة بغض النظر عن ساعة جهاز المستخدم
+        function localDate(d) {
+            d = d || new Date();
+            const pt = {};
+            _cairoDateFmt.formatToParts(d).forEach(x => { pt[x.type] = x.value; });
+            return pt.year + '-' + pt.month + '-' + pt.day;
+        }
         let adminCreds = { name: "مدير النظام" };
         let groups = JSON.parse(localStorage.getItem('sys_groups')) || DEFAULT_GROUPS;
         let students = JSON.parse(localStorage.getItem('sys_students')) || DEFAULT_STUDENTS;
@@ -1844,29 +1900,58 @@ const supabaseClient = window.supabase.createClient(
             showToast("تم حفظ المجموعة بنجاح", "success");
         }
 
+        let _delGroupId = null;
         function deleteGroup(id) {
             const g = groups.find(x => x.id === id);
             if (!g) return;
-            const n = students.filter(s => s.groupId === id).length;
+            _delGroupId = id;
+            const stIds = new Set(students.filter(s => s.groupId === id).map(s => s.id));
             const plans = paymentPlans.filter(p => p.groupId === id);
             const grpExams = exams.filter(e => e.targetGroupId === id);
-            let msg = `هل أنت تأكد من حذف "${g.name}"؟`;
-            if (n) msg += `\nتنبيه: يوجد ${n} طالب فيها وسيبقون بدون مجموعة حتى تنقلهم.`;
-            if (plans.length) msg += `\nسيتم حذف ${plans.length} مستحق مالي مرتبط بها مع سجلات الدفع.`;
-            if (grpExams.length) msg += `\nسيتم حذف ${grpExams.length} امتحان مخصص لها مع درجاته.`;
-            if (confirm(msg)) {
-                const planIds = new Set(plans.map(p => p.id)), examIds = new Set(grpExams.map(e => e.id));
-                groups = groups.filter(x => x.id !== id);
-                paymentPlans = paymentPlans.filter(p => !planIds.has(p.id));
-                studentPayments = studentPayments.filter(r => !planIds.has(r.planId));
-                exams = exams.filter(e => !examIds.has(e.id));
-                examGrades = examGrades.filter(r => !examIds.has(r.examId));
-                localStorage.setItem('sys_groups', JSON.stringify(groups));
-                if (plans.length) { localStorage.setItem('sys_payment_plans', JSON.stringify(paymentPlans)); localStorage.setItem('sys_student_payments', JSON.stringify(studentPayments)); }
-                if (grpExams.length) { localStorage.setItem('sys_exams', JSON.stringify(exams)); localStorage.setItem('sys_exam_grades', JSON.stringify(examGrades)); }
-                refreshGroupViews();
-                showToast("تم حذف المجموعة بنجاح", "info");
+            const nLogs = logs.filter(l => stIds.has(l.studentId)).length;
+            const nGrades = examGrades.filter(r => stIds.has(r.studentId)).length;
+            const nPays = studentPayments.filter(r => stIds.has(r.studentId)).length;
+            $id('dgTitle').textContent = `حذف المجموعة "${g.name}"`;
+            const li = t => `<div>• ${t}</div>`;
+            $id('dgInfo').innerHTML =
+                li(`عدد الطلاب في المجموعة: ${stIds.size}`) +
+                (plans.length ? li(`${plans.length} مستحق مالي مخصص للمجموعة (هيتحذف مع سجلات دفعه في الحالتين)`) : '') +
+                (grpExams.length ? li(`${grpExams.length} امتحان مخصص للمجموعة (هيتحذف مع درجاته في الحالتين)`) : '') +
+                (stIds.size ? li(`بيانات الطلاب: ${nLogs} سجل حضور • ${nGrades} درجة • ${nPays} سجل دفع`) : '');
+            $id('dgWithStudentsBtn').classList.toggle('hidden', stIds.size === 0);
+            $id('deleteGroupModal').classList.remove('hidden');
+        }
+        function confirmDeleteGroup(withStudents) {
+            const id = _delGroupId, g = groups.find(x => x.id === id);
+            if (!g) { closeModal('deleteGroupModal'); return; }
+            const stIds = withStudents ? new Set(students.filter(s => s.groupId === id).map(s => s.id)) : new Set();
+            if (withStudents && !confirm(`تحذير: سيتم حذف ${stIds.size} طالب نهائياً مع كل سجلاتهم (الحضور، التقييمات، الدرجات، المدفوعات). لا يمكن التراجع. هل أنت متأكد؟`)) return;
+            const plans = paymentPlans.filter(p => p.groupId === id);
+            const grpExams = exams.filter(e => e.targetGroupId === id);
+            const planIds = new Set(plans.map(p => p.id)), examIds = new Set(grpExams.map(e => e.id));
+
+            groups = groups.filter(x => x.id !== id);
+            paymentPlans = paymentPlans.filter(p => !planIds.has(p.id));
+            studentPayments = studentPayments.filter(r => !planIds.has(r.planId) && !stIds.has(r.studentId));
+            exams = exams.filter(e => !examIds.has(e.id));
+            examGrades = examGrades.filter(r => !examIds.has(r.examId) && !stIds.has(r.studentId));
+            localStorage.setItem('sys_groups', JSON.stringify(groups));
+            if (plans.length || stIds.size) { localStorage.setItem('sys_payment_plans', JSON.stringify(paymentPlans)); localStorage.setItem('sys_student_payments', JSON.stringify(studentPayments)); }
+            if (grpExams.length || stIds.size) { localStorage.setItem('sys_exams', JSON.stringify(exams)); localStorage.setItem('sys_exam_grades', JSON.stringify(examGrades)); }
+            if (stIds.size) {
+                students = students.filter(s => !stIds.has(s.id));
+                logs = logs.filter(l => !stIds.has(l.studentId));
+                evalLogs = evalLogs.filter(e => !stIds.has(e.studentId));
+                localStorage.setItem('sys_students', JSON.stringify(students));
+                localStorage.setItem('sys_logs', JSON.stringify(logs));
+                localStorage.setItem('sys_eval_logs', JSON.stringify(evalLogs));
             }
+            closeModal('deleteGroupModal');
+            if (openGroupId === id) closeModal('groupStudentsModal');
+            _delGroupId = null;
+            refreshGroupViews();
+            renderLogsTable();
+            showToast(withStudents ? "تم حذف المجموعة مع الطلاب وكل بياناتهم" : "تم حذف المجموعة، والطلاب بقوا بدون مجموعة", "info");
         }
 
         // ===== عرض طلاب المجموعة =====
@@ -2042,9 +2127,9 @@ const supabaseClient = window.supabase.createClient(
         function processStudentCode(code) {
             code = String(code || '').trim();
             if (!code) return;
-            // الكاميرا بتقرأ نفس الكود عدة مرات في الثانية — نتجاهل التكرار خلال 3 ثواني
+            // الكاميرا بتقرأ نفس الكود عدة مرات في الثانية — نتجاهل التكرار خلال 5 ثواني
             const nowTs = Date.now();
-            if (window._lastScan && window._lastScan.code === code && nowTs - window._lastScan.t < 3000) return;
+            if (window._lastScan && window._lastScan.code === code && nowTs - window._lastScan.t < 5000) return;
             window._lastScan = { code, t: nowTs };
 
             const student = students.find(s => String(s.code).trim() === code || s.id === code);
@@ -2104,15 +2189,15 @@ const supabaseClient = window.supabase.createClient(
                     showToast(`التسجيل لم يبدأ — يفتح الساعة ${fmtMin(w.open)}`, 'error');
                     return;
                 }
-                if (w && nowMin >= w.end) {
+                if (w && nowMin >= w.absentFrom) {
                     playStatusSound('ERROR');
                     document.getElementById('scanResultBox').innerHTML = `
                         <div class="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center text-2xl mb-3"><i class="fa-solid fa-clock"></i></div>
-                        <h3 class="font-bold text-rose-600 text-base">انتهت الحصة — التسجيل مقفول!</h3>
+                        <h3 class="font-bold text-rose-600 text-base">وقت التسجيل انتهى!</h3>
                         <p class="text-xs font-bold text-[#0F172A] mt-1">${esc(student.name)} (ID: ${esc(student.code)})</p>
-                        <p class="text-xs text-[#64748B] mt-1">انتهت حصة ${esc(autoGroup.name)} الساعة ${fmtMin(w.end)} ولا يمكن تسجيل حضور بعد انتهائها.</p>
+                        <p class="text-xs text-[#64748B] mt-1">انتهى تسجيل حضور ${esc(autoGroup.name)} الساعة ${fmtMin(w.absentFrom)} (بعد ${ABSENCE_GRACE_MIN} دقيقة من موعد الحصة).</p>
                         <p class="text-xs text-rose-600 font-bold mt-1">لتغيير حالته: سجل الحضور ← تعديل الحالة</p>`;
-                    showToast(`انتهت الحصة — لا يمكن تسجيل حضور ${student.name}`, 'error');
+                    showToast(`وقت التسجيل انتهى — لا يمكن تسجيل حضور ${student.name}`, 'error');
                     runAutoAbsence(true, autoGroup.id);
                     return;
                 }
@@ -2905,7 +2990,7 @@ const supabaseClient = window.supabase.createClient(
             const total = d.att.length;
             const stTxt = { PRESENT: ['حاضر', 'text-emerald-600'], LATE: ['متأخر', 'text-amber-600'], ABSENT: ['غائب', 'text-rose-600'] };
             const tbl = (h, rows, empty) => `<table class="w-full text-right text-xs border border-[#E2E8F0]"><thead class="bg-[#F1F5F9]"><tr>${h.map(x => `<th class="p-2 border border-[#E2E8F0]">${x}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map(r => `<tr>${r.map(c => `<td class="p-2 border border-[#E2E8F0]">${c}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${h.length}" class="p-3 text-center text-slate-500">${empty}</td></tr>`}</tbody></table>`;
-            const title = (icon, t) => `<h4 class="font-bold text-xs text-[#0F172A] mb-2"><i class="fa-solid ${icon} text-[#2563EB] ml-1"></i> ${t}</h4>`;
+            const secTitle = (icon, t) => `<h4 class="font-bold text-xs text-[#0F172A] mb-2"><i class="fa-solid ${icon} text-[#2563EB] ml-1"></i> ${t}</h4>`;
             const card = (c, label, val) => `<div class="p-3 bg-${c}-50 border border-${c}-100 rounded-xl"><p class="text-[#64748B]">${label}</p><h4 class="text-lg font-black text-${c}-600">${val}</h4></div>`;
             const lastEval = d.evals[0];
 
@@ -2935,22 +3020,22 @@ const supabaseClient = window.supabase.createClient(
                     ${card('emerald', 'المدفوع (جنيه)', d.paidSum.toLocaleString('ar-EG'))}${card('rose', 'المتبقي (جنيه)', d.dueSum.toLocaleString('ar-EG'))}
                 </div>
 
-                <div>${title('fa-list-check', 'الحضور والغياب خلال الفترة:')}
+                <div>${secTitle('fa-list-check', 'الحضور والغياب خلال الفترة:')}
                     ${tbl(['التاريخ', 'وقت التسجيل', 'الحالة'], d.att.map(l => { const t = stTxt[l.status] || [l.status, '']; return [`<span class="font-mono">${esc(l.date)}</span>`, `<span class="font-mono">${esc(l.time)}</span>`, `<b class="${t[1]}">${t[0]}</b>`]; }), 'لا توجد سجلات حضور في هذه الفترة')}
                 </div>
 
-                <div>${title('fa-file-pen', 'الدرجات والامتحانات:')}
+                <div>${secTitle('fa-file-pen', 'الدرجات والامتحانات:')}
                     ${tbl(['الامتحان', 'التاريخ', 'الدرجة', 'النسبة', 'الترتيب'], d.examRows.map(r => [esc(r.title), `<span class="font-mono">${esc(r.date)}</span>`,
                         r.score === null ? '<span class="text-slate-400">لم تُرصد</span>' : `<b>${r.score}</b> / ${r.max}`,
                         r.pct === null ? '--' : `<b class="${r.pct >= 50 ? 'text-emerald-600' : 'text-rose-600'}">${r.pct}%</b>`,
                         r.rank === null ? '--' : `${r.rank} من ${r.of}`]), 'لا توجد امتحانات لهذا الطالب في هذه الفترة')}
                 </div>
 
-                <div>${title('fa-star', 'التقييمات الأسبوعية:')}
+                <div>${secTitle('fa-star', 'التقييمات الأسبوعية:')}
                     ${tbl(['التاريخ', 'التقييم', 'الملاحظات'], d.evals.map(e => [`<span class="font-mono">${esc(e.date)}</span>`, `<b class="text-blue-600">${esc(e.grade)}</b>`, esc(e.notes || '-')]), 'لا توجد تقييمات في هذه الفترة')}
                 </div>
 
-                <div>${title('fa-money-bill-wave', 'المدفوعات (تراكمية، لا تتأثر بفلتر الشهر):')}
+                <div>${secTitle('fa-money-bill-wave', 'المدفوعات (تراكمية، لا تتأثر بفلتر الشهر):')}
                     ${tbl(['المستحق', 'المطلوب', 'المدفوع', 'المتبقي', 'الاستحقاق', 'الحالة', 'تاريخ السداد'], d.pays.map(p => [esc(p.name), p.amount.toLocaleString('ar-EG'), p.paidAmt.toLocaleString('ar-EG'),
                         `<b class="${p.paid ? 'text-emerald-600' : 'text-rose-600'}">${Math.max(0, p.amount - p.paidAmt).toLocaleString('ar-EG')}</b>`, esc(p.due || '--'),
                         p.paid ? '<b class="text-emerald-600">تم الدفع ✅</b>' : (p.paidAmt > 0 ? '<b class="text-amber-600">جزئي ⏳</b>' : '<b class="text-rose-600">لم يُسدَّد ⚠️</b>'), p.paidAmt > 0 ? esc(p.paidDate || '--') : '--']), 'لا توجد مستحقات لمجموعة الطالب')}
@@ -3060,6 +3145,64 @@ const supabaseClient = window.supabase.createClient(
             renderPaymentsTable();
             showToast('تم حذف المستحق', 'info');
         }
+        // ===== إيصال سداد (مقاس 80mm زي إيصالات فوري) =====
+        function newReceiptNo() {
+            const d = new Date(), p = n => String(n).padStart(2, '0');
+            return 'R' + String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+        }
+        function printReceipt(planId, studentId) {
+            const st = students.find(x => x.id === studentId), plan = paymentPlans.find(p => p.id === planId), rec = getPaymentRecord(planId, studentId);
+            if (!st || !plan || !rec) return;
+            const paidAll = paidAmountOf(plan, rec);
+            if (!(paidAll > 0)) { showToast('لا توجد دفعة لهذا الطالب', 'error'); return; }
+            if (!rec.receiptNo) { rec.receiptNo = newReceiptNo(); localStorage.setItem('sys_student_payments', JSON.stringify(studentPayments)); }
+            const g = groups.find(x => x.id === st.groupId), total = Number(plan.amount), rem = Math.max(0, total - paidAll);
+            const now = rec.lastPayAt ? new Date(rec.lastPayAt) : new Date();
+            const pt = {}; new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Cairo', hour12: true, day: '2-digit', month: '2-digit', year: 'numeric', hour: 'numeric', minute: '2-digit' }).formatToParts(now).forEach(x => { pt[x.type] = x.value; });
+            const dateTxt = `${pt.year}/${pt.month}/${pt.day}`, timeTxt = `${pt.hour}:${pt.minute} ${String(pt.dayPeriod).toLowerCase() === 'pm' ? 'م' : 'ص'}`;
+            const n = v => Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 });
+            const row = (k, v) => `<div class="r"><span>${k}</span><b>${v}</b></div>`;
+            const html = `<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>إيصال ${esc(rec.receiptNo)}</title><style>
+@page{size:58mm auto;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;height:auto}body{width:58mm;padding:2mm 2.5mm 1mm;font-family:Tahoma,Arial,sans-serif;font-size:10px;line-height:1.3;color:#000}
+.c{text-align:center}.logo{max-height:11mm;max-width:40mm}.t{font-size:12px;font-weight:800;margin:2px 0}.s{font-size:9px;color:#333}
+.hr{border-top:1px dashed #000;margin:3px 0}.r{display:flex;justify-content:space-between;gap:4px;padding:1px 0}.r span{color:#333}.r b{text-align:left}
+.amt{border:1.5px solid #000;border-radius:4px;text-align:center;padding:3px;margin:3px 0}.amt small{display:block;font-size:9px}.amt strong{font-size:16px}
+.stamp{text-align:center;font-weight:800;font-size:11px;margin:2px 0}.sig{margin-top:8px;display:flex;justify-content:space-between;font-size:9px}</style></head><body>
+<div class="c"><img class="logo" src="${LOGO_DATA}"><div class="t">سنتر مستر أحمد جابر</div><div class="s">إيصال سداد</div></div>
+<div class="hr"></div>
+${row('رقم الإيصال', esc(rec.receiptNo))}${row('التاريخ', dateTxt)}${row('الوقت', timeTxt)}
+<div class="hr"></div>
+${row('الطالب', esc(st.name))}${row('الكود', esc(st.code))}${row('الصف', esc(gradeOf(st)))}${row('المجموعة', g ? esc(g.name) : '--')}${row('البند', esc(plan.name))}
+<div class="hr"></div>
+<div class="amt"><small>${rec.lastPay != null ? 'المبلغ المدفوع الآن' : 'إجمالي المدفوع'}</small><strong>${n(rec.lastPay ?? paidAll)} جنيه</strong></div>
+${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي المدفوع', n(paidAll) + ' جنيه')}${row('المتبقي', n(rem) + ' جنيه')}
+<div class="hr"></div>
+<div class="stamp">${rem === 0 ? '✔ تم السداد بالكامل' : 'سداد جزئي'}</div>
+<div class="sig"><span>المستلم: ........</span><span>التوقيع: ........</span></div>
+<div class="c s" style="margin-top:4px">شكراً لكم — يرجى الاحتفاظ بالإيصال</div></body></html>`;
+            const f = document.createElement('iframe');
+            f.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0';
+            document.body.appendChild(f);
+            const d = f.contentWindow.document; d.open(); d.write(html); d.close();
+            const go = () => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) { console.error(e); } setTimeout(() => f.remove(), 60000); };
+            const img = d.querySelector('img');
+            if (img && !img.complete) { img.onload = go; img.onerror = go; } else setTimeout(go, 150);
+        }
+        // خيار الطباعة التلقائية بعد كل دفعة
+        (function () {
+            const add = () => {
+                const inp = document.getElementById('paymentStudentSearch'); if (!inp || document.getElementById('autoReceiptBox')) return;
+                const cell = document.createElement('div'); cell.className = 'md:col-span-1';
+                cell.innerHTML = '<label id="autoReceiptBox" class="flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-bold cursor-pointer select-none" style="border:2px solid #2563EB;background:#EFF6FF;color:#1E3A8A"><input type="checkbox" id="autoReceiptChk" style="width:16px;height:16px;accent-color:#16A34A"><span>🖨 طباعة إيصال تلقائياً بعد كل دفعة</span></label>';
+                inp.parentElement.after(cell);
+                const box = cell.firstElementChild, c = box.querySelector('input');
+                const paint = () => { box.style.borderColor = c.checked ? '#16A34A' : '#2563EB'; box.style.background = c.checked ? '#DCFCE7' : '#EFF6FF'; box.style.color = c.checked ? '#14532D' : '#1E3A8A'; };
+                c.checked = localStorage.getItem('ui_auto_receipt') === '1'; paint();
+                c.onchange = () => { localStorage.setItem('ui_auto_receipt', c.checked ? '1' : '0'); paint(); };
+            };
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add); else add();
+        })();
+
         function getPaymentRecord(planId, studentId) {
             return studentPayments.find(p => p.planId === planId && p.studentId === studentId);
         }
@@ -3069,16 +3212,26 @@ const supabaseClient = window.supabase.createClient(
             let amt = parseFloat(val);
             if (!Number.isFinite(amt) || amt < 0) amt = 0;
             if (amt > Number(plan.amount)) { amt = Number(plan.amount); showToast('المبلغ أكبر من المطلوب، تم ضبطه على المطلوب', 'error'); }
+            amt = Math.round(amt * 100) / 100;
             let rec = getPaymentRecord(planId, studentId);
             if (!rec) { rec = { id: 'SP-' + planId + '-' + studentId, planId, studentId, paid: false, paidDate: '', amountPaid: 0 }; studentPayments.push(rec); }
-            const prevPaid = paidAmountOf(plan, rec);
+            const prevPaid = Math.round(paidAmountOf(plan, rec) * 100) / 100;
+            const diff = Math.round((amt - prevPaid) * 100) / 100;
             rec.amountPaid = amt;
             rec.paid = amt > 0 && amt >= Number(plan.amount);
             // تاريخ السداد = تاريخ آخر دفعة (بيتحدّث لما المبلغ المدفوع يزيد)
-            if (amt > prevPaid || (amt > 0 && !rec.paidDate)) rec.paidDate = today10();
-            if (amt === 0) rec.paidDate = '';
+            if (diff > 0 || (amt > 0 && !rec.paidDate)) rec.paidDate = today10();
+            if (diff > 0) {
+                // دفعة جديدة: "المدفوع الآن" = الفرق الفعلي فقط
+                rec.lastPay = diff; rec.lastPayAt = new Date().toISOString(); rec.receiptNo = newReceiptNo();
+            } else if (diff < 0) {
+                // تقليل المبلغ: نلغي بيانات الدفعة السابقة عشان الإيصال يعرض الإجمالي الصحيح بدل رقم قديم
+                delete rec.lastPay; delete rec.lastPayAt; delete rec.receiptNo;
+            }
+            if (amt === 0) { rec.paidDate = ''; delete rec.lastPay; delete rec.lastPayAt; delete rec.receiptNo; }
             localStorage.setItem('sys_student_payments', JSON.stringify(studentPayments));
             renderPaymentsTable();
+            if (diff > 0 && localStorage.getItem('ui_auto_receipt') === '1') setTimeout(() => printReceipt(planId, studentId), 50);
         }
         function payFull(planId, studentId) {
             const plan = paymentPlans.find(p => p.id === planId);
@@ -3154,7 +3307,7 @@ const supabaseClient = window.supabase.createClient(
                     <td class="p-3">${paidAmt > 0 ? esc(rec.paidDate || '--') + ` <button onclick="editPaymentDate('${plan.id}','${st.id}')" class="text-blue-600 mr-1" title="تعديل تاريخ السداد"><i class="fa-solid fa-pen"></i></button>` : '--'}</td>
                     <td class="p-3 whitespace-nowrap">
                         ${rem > 0 ? `<button onclick="payFull('${plan.id}','${st.id}')" class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-700 font-bold ml-1">سداد كامل</button>` : ''}
-                        ${paidAmt > 0 ? `<button onclick="sendPaymentReceipt('${plan.id}','${st.id}','parent')" title="إرسال إيصال سداد لولي الأمر" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1"><i class="fa-solid fa-receipt ml-1"></i>إيصال لولي الأمر</button><button onclick="sendPaymentReceipt('${plan.id}','${st.id}','student')" title="إرسال إيصال سداد للطالب" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1">إيصال للطالب</button>` : ''}<button onclick="sendPaymentWhatsApp('${st.id}','${plan.id}')" class="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"><i class="fa-brands fa-whatsapp ml-1"></i>واتساب</button>
+                        ${paidAmt > 0 ? `<button onclick="printReceipt('${plan.id}','${st.id}')" title="طباعة إيصال" class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold ml-1"><i class="fa-solid fa-print"></i></button><button onclick="sendPaymentReceipt('${plan.id}','${st.id}','parent')" title="إرسال إيصال سداد لولي الأمر" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1"><i class="fa-solid fa-receipt ml-1"></i>إيصال لولي الأمر</button>` : ''}
                     </td>
                 </tr>`;
             }).join('') || '<tr><td colspan="10" class="p-6 text-center text-slate-500">لا يوجد طلاب مطابقون في المجموعة المحددة.</td></tr>';
@@ -3522,10 +3675,11 @@ const supabaseClient = window.supabase.createClient(
         }
 
         // ===== الطلاب اللي درجتهم أقل من نص درجة الامتحان (كل الصفوف والمجموعات) =====
-        function openLowModal() {
+        function openLowModal() { openTopModal('low'); }
+        function initLowPane() {
             $id('lowGrade').value = 'ALL'; $id('lowSearch').value = '';
             $id('lowExam').innerHTML = '<option value="ALL">كل الامتحانات</option>' + exams.map(e => `<option value="${e.id}">${esc(e.title)} (${esc(e.maxGrade)} د)</option>`).join('');
-            fillLowGroups(); renderLowList(); $id('lowModal').classList.remove('hidden');
+            fillLowGroups(); renderLowList();
         }
         function fillLowGroups() {
             $id('lowGroup').innerHTML = '<option value="ALL">كل المجموعات</option>' + groupsForGrade($id('lowGrade').value).map(g => `<option value="${g.id}">${esc(g.name)}</option>`).join('');
@@ -3569,6 +3723,85 @@ const supabaseClient = window.supabase.createClient(
             const who = $id('lowTarget').value, by = new Map();
             (window._lowRows || []).forEach(r => { if (!by.has(r.st.id)) by.set(r.st.id, { st: r.st, items: [] }); by.get(r.st.id).items.push(r); });
             startBulk('تنبيه جماعي: أقل من نصف الدرجة', [...by.values()].map(({ st, items }) => ({ name: st.name, raw: phoneFor(st, who), phone: formatWaPhone(phoneFor(st, who)), msg: lowListMsg(st, items, who) })));
+        }
+
+        // ===== ترتيب الأوائل على مستوى الصف كله =====
+        function openTopModal(tab) {
+            const cur = $id('examGradeGradeFilter').value;
+            $id('topGrade').value = GRADES.includes(cur) ? cur : GRADES[0];
+            fillTopExams();
+            $id('topModal').classList.remove('hidden');
+            switchTopTab(tab === 'low' ? 'low' : 'top');
+        }
+        function switchTopTab(tab) {
+            const low = tab === 'low', base = 'px-4 py-2 rounded-xl font-bold ', off = 'bg-slate-100 text-slate-700 hover:bg-slate-200';
+            $id('topPane').classList.toggle('hidden', low);
+            $id('lowPane').classList.toggle('hidden', !low);
+            $id('topTabTop').className = base + (low ? off : 'bg-amber-500 text-white');
+            $id('topTabLow').className = base + (low ? 'bg-rose-600 text-white' : off);
+            if (low) initLowPane(); else renderTopList();
+        }
+        const _normTitle = t => String(t || '').trim().replace(/\s+/g, ' ').toLowerCase();
+        // قائمة الكويزات المتاحة للصف المختار (الكويز المتكرر في أكتر من مجموعة بيظهر مرة واحدة)
+        function fillTopExams() {
+            const grade = $id('topGrade').value, sel = $id('topExam');
+            const prev = sel.value, curExam = exams.find(e => e.id === $id('examSelectFilter').value);
+            const by = new Map();
+            exams.filter(ex => !ex.targetGrade || ex.targetGrade === 'ALL' || ex.targetGrade === grade).forEach(ex => {
+                const k = _normTitle(ex.title), o = by.get(k) || { title: ex.title, n: 0, date: '' };
+                o.n++; if ((ex.date || '') > o.date) o.date = ex.date || ''; by.set(k, o);
+            });
+            const list = [...by.entries()].sort((a, b) => b[1].date.localeCompare(a[1].date));
+            sel.innerHTML = '<option value="__ALL__">كل الامتحانات (متوسط النسبة)</option>' +
+                list.map(([k, o]) => `<option value="${esc(k)}">${esc(o.title)}${o.date ? ' — ' + esc(o.date) : ''}${o.n > 1 ? ` (${o.n} مجموعات)` : ''}</option>`).join('');
+            const want = [...sel.options].some(o => o.value === prev) ? prev
+                : (curExam && by.has(_normTitle(curExam.title)) ? _normTitle(curExam.title) : (list.length ? list[0][0] : '__ALL__'));
+            sel.value = want;
+        }
+        async function renderTopList() {
+            const grade = $id('topGrade').value, pick = $id('topExam').value, limit = Number($id('topLimit').value) || 0;
+            const body = $id('topBody'), sum = $id('topSummary');
+            const token = window._topToken = (window._topToken || 0) + 1;
+            const msg = t => { body.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-[#64748B]">${t}</td></tr>`; };
+            let sel = exams.filter(ex => !ex.targetGrade || ex.targetGrade === 'ALL' || ex.targetGrade === grade);
+            let label = 'كل الامتحانات';
+            if (pick !== '__ALL__') {
+                sel = sel.filter(ex => _normTitle(ex.title) === pick);
+                if (sel.length) label = sel[0].title;
+            }
+            if (!sel.length) { sum.textContent = ''; msg('لا توجد امتحانات لهذا الصف'); return; }
+            sum.textContent = 'جاري التحميل...';
+            await Promise.all(sel.map(ex => ensureExamGrades(ex.id)));   // الدرجات القديمة بتتحمل من السحابة عند الحاجة
+            if (token !== window._topToken) return;
+
+            const exMap = new Map(sel.map(e => [e.id, e])), per = new Map();
+            examGrades.forEach(g => {
+                const ex = exMap.get(g.examId); if (!ex) return;
+                const max = Number(ex.maxGrade), score = Number(g.score);
+                if (!(max > 0) || !Number.isFinite(score)) return;
+                const o = per.get(g.studentId) || { pcts: [], score: 0, max: 0 };
+                o.pcts.push(score / max * 100); o.score += score; o.max += max; per.set(g.studentId, o);
+            });
+            const gradeStudents = students.filter(s => gradeOf(s) === grade);
+            let rows = gradeStudents.filter(s => per.has(s.id)).map(s => {
+                const o = per.get(s.id);
+                return { s, n: o.pcts.length, score: o.score, max: o.max, pct: Math.round(o.pcts.reduce((a, b) => a + b, 0) / o.pcts.length * 100) / 100 };
+            }).sort((a, b) => b.pct - a.pct || a.s.name.localeCompare(b.s.name, 'ar'));
+            rows.forEach((r, i) => { r.rank = i > 0 && rows[i - 1].pct === r.pct ? rows[i - 1].rank : i + 1; });
+            const total = rows.length;
+            if (limit) rows = rows.filter(r => r.rank <= limit);
+
+            sum.textContent = `${grade} — ${label} — ${total} طالب لهم درجات من أصل ${gradeStudents.length}` + (sel.length > 1 ? ` (${sel.length} امتحان)` : '');
+            if (!rows.length) { msg('لا توجد درجات مرصودة لهذا الصف بعد'); return; }
+            const medal = r => r === 1 ? 'bg-amber-400 text-white font-black' : r === 2 ? 'bg-slate-300 text-slate-800 font-black' : r === 3 ? 'bg-orange-300 text-orange-900 font-black' : 'bg-slate-100 text-slate-700';
+            const f = v => Math.round(v * 100) / 100;
+            body.innerHTML = rows.map(r => {
+                const g = groups.find(x => x.id === r.s.groupId);
+                return `<tr><td class="p-2.5"><span class="w-7 h-7 rounded-full inline-flex items-center justify-center ${medal(r.rank)}">${r.rank}</span></td>` +
+                    `<td class="p-2.5 font-bold text-[#0F172A]">${esc(r.s.name)}</td><td class="p-2.5">${g ? esc(g.name) : '--'}</td>` +
+                    `<td class="p-2.5 font-mono font-bold">${r.n === 1 ? `${f(r.score)} / ${f(r.max)}` : `${r.n} امتحانات (${f(r.score)} / ${f(r.max)})`}</td>` +
+                    `<td class="p-2.5 font-bold ${r.pct >= 50 ? 'text-emerald-600' : 'text-rose-600'}">${f(r.pct)}%</td></tr>`;
+            }).join('');
         }
 
         // ===== المتخلفون عن الدفع + إيصال السداد =====
@@ -3638,7 +3871,7 @@ const supabaseClient = window.supabase.createClient(
                     : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
                     : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
                 return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(forDay(g))} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
-            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم </div>';
+            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
         }
         function checkClassReminders() {
             if (!cloudReady) return;
