@@ -587,6 +587,13 @@
                     </form>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                    <div class="md:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 p-3 bg-blue-50 border border-blue-100 rounded-xl items-end">
+                        <div><label class="block font-bold mb-1 text-xs"><i class="fa-solid fa-filter ml-1 text-blue-600"></i>الصف</label><select id="payFGrade" onchange="payFilterChanged(true)" class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select></div>
+                        <div><label class="block font-bold mb-1 text-xs">المجموعة</label><select id="payFGroup" onchange="payFilterChanged()" class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"><option value="ALL">كل المجموعات</option></select></div>
+                        <div><label class="block font-bold mb-1 text-xs">اسم المستحق</label><input id="payFPlanSearch" oninput="payFilterChanged()" placeholder="ابحث باسم المستحق..." class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></div>
+                        <div><label class="block font-bold mb-1 text-xs">حالة الدفع</label><select id="payFStatus" onchange="renderPaymentsTable()" class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"><option value="ALL">الكل</option><option value="paid">دفعوا كامل ✅</option><option value="partial">دفعوا جزئياً ⏳</option><option value="unpaid">لم يدفعوا ❌</option><option value="notfull">لم يكملوا الدفع (جزئي + لم يدفع)</option></select></div>
+                        <div><button type="button" onclick="resetPayFilters()" class="w-full py-2.5 bg-white border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-xl text-xs font-bold"><i class="fa-solid fa-rotate-left ml-1"></i>تفريغ الفلاتر</button></div>
+                    </div>
                     <div class="md:col-span-2"><label class="block font-bold mb-1 text-xs">اختر المستحق لمتابعة السداد</label><select id="paymentPlanFilter" onchange="renderPaymentsTable()" class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></select></div>
                     <div class="md:col-span-1"><label class="block font-bold mb-1 text-xs">البحث عن طالب بالاسم أو الكود</label><input id="paymentStudentSearch" oninput="renderPaymentsTable()" placeholder="اكتب اسم الطالب أو الكود..." class="w-full p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-sm"></div><div class="md:col-span-4"><button onclick="openUnpaidModal()" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-user-clock"></i> عرض كل المتخلفين عن الدفع (كل الصفوف والمجموعات)</button></div><div class="md:col-span-1"><button onclick="deletePaymentPlan()" class="w-full py-2.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5"><i class="fa-solid fa-trash-can"></i> حذف هذا المستحق</button></div>
                     <div class="md:col-span-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 text-xs font-bold"><div class="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">عدد الطلاب</p><b id="paymentCountTotal" class="text-base text-slate-700">0</b></div><div class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">دفعوا كامل</p><b id="paymentCountPaid" class="text-base text-emerald-700">0</b></div><div class="p-2.5 bg-amber-50 border border-amber-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">دفعوا جزئياً</p><b id="paymentCountPartial" class="text-base text-amber-700">0</b></div><div class="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">لم يدفعوا</p><b id="paymentCountUnpaid" class="text-base text-rose-700">0</b></div><div class="p-2.5 bg-blue-50 border border-blue-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">إجمالي المطلوب (جنيه)</p><b id="paymentRequired" class="text-base text-blue-700">0</b></div><div class="p-2.5 bg-emerald-50 border border-emerald-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">المحصّل (جنيه)</p><b id="paymentCollected" class="text-base text-emerald-700">0</b></div><div class="p-2.5 bg-rose-50 border border-rose-100 rounded-xl text-center"><p class="text-[#64748B] font-semibold">المتبقي لك (جنيه)</p><b id="paymentRemaining" class="text-base text-rose-700">0</b></div></div>
@@ -1653,7 +1660,7 @@ const supabaseClient = window.supabase.createClient(
             // ولا يبدأ احتساب الغياب إلا بعد مرور 15 دقيقة على موعد بداية الحصة
             const _w = chosen ? groupWindow(chosen) : null;
             const _nowM = cairoNowMin();
-            const absentCount = (_w && _nowM >= _w.absentFrom) ? Math.max(0, groupStudents.length - (presentCount + lateCount)) : 0;
+            const absentCount = (_w && _nowM >= _w.absentFrom && !(chosen.cancelled || []).includes(today)) ? Math.max(0, groupStudents.length - (presentCount + lateCount)) : 0;
 
             const info = $id('dashGroupInfo');
             if (info) info.textContent = chosen ? `${chosen.days || ''} — ${fmtGroupTime(slotOf(chosen).time)} — ${groupStudents.length} طالب` : 'لا توجد مجموعة اليوم';
@@ -2137,14 +2144,29 @@ const supabaseClient = window.supabase.createClient(
         }
 
         // ===== إلغاء حصة اليوم / إجازة =====
-        function toggleCancelToday(id) {
+        // حذف سجلات الغياب (غائب / غائب بعذر) في أي يوم اتلغت فيه حصة المجموعة — بتتشال من الإحصائيات والتقارير
+        function purgeCancelledAbsences() {
+            const gm = new Map(groups.map(g => [g.id, g.cancelled || []]));
+            const ids = new Set(logs.filter(l => isAbs(l.status) && (gm.get(l.groupId) || []).includes(l.date)).map(l => l.id));
+            if (!ids.size) return 0;
+            logs = logs.filter(l => !ids.has(l.id));
+            localStorage.setItem('sys_logs', JSON.stringify(logs));
+            return ids.size;
+        }
+        async function toggleCancelToday(id) {
             const g = groups.find(x => x.id === id); if (!g) return;
             const t = localDate(); g.cancelled = g.cancelled || []; const i = g.cancelled.indexOf(t);
             if (i > -1) g.cancelled.splice(i, 1);
-            else { if (!confirm('إلغاء حصة ' + g.name + ' اليوم؟ لن يُسجَّل غياب ولن يُقبل مسح لهذه المجموعة.')) return; g.cancelled.push(t); }
+            else { if (!confirm('إلغاء حصة ' + g.name + ' اليوم؟ لن يُحسب غياب لطلاب المجموعة اليوم (وهيتشال أي غياب اتسجل لهم النهارده) ولن يُقبل مسح لهذه المجموعة.')) return; g.cancelled.push(t); }
             g.cancelled = g.cancelled.slice(-30);
-            localStorage.setItem('sys_groups', JSON.stringify(groups)); renderGroupsCards();
-            showToast(i > -1 ? 'تم إعادة تفعيل حصة اليوم' : 'تم إلغاء حصة اليوم', 'success');
+            localStorage.setItem('sys_groups', JSON.stringify(groups));
+            let removed = 0;
+            if (i === -1) {
+                try { await refreshTodayLogs(true); } catch (e) { console.error(e); }
+                removed = purgeCancelledAbsences();
+            }
+            renderGroupsCards(); renderLogsTable(); updateDashboardCharts(); renderStudentsTable();
+            showToast(i > -1 ? 'تم إعادة تفعيل حصة اليوم' : ('تم إلغاء حصة اليوم' + (removed ? ' — اتشال غياب ' + removed + ' طالب' : '')), 'success');
         }
 
         // ===== تحميل السجلات القديمة عند الطلب =====
@@ -2843,7 +2865,7 @@ const supabaseClient = window.supabase.createClient(
             setInterval(refreshTodayLogs, 20000);
             setInterval(() => { renderTodayClasses(); checkClassReminders(); }, 30000);
             setInterval(checkClassReminders, 10000);
-            setTimeout(() => { renderTodayClasses(); checkClassReminders(); updateNotifBtn(); runAutoAbsence(true); }, 2500);
+            setTimeout(() => { if (purgeCancelledAbsences()) { renderLogsTable(); updateDashboardCharts(); renderStudentsTable(); } renderTodayClasses(); checkClassReminders(); updateNotifBtn(); runAutoAbsence(true); }, 2500);
         }
 
 
@@ -3208,6 +3230,7 @@ const supabaseClient = window.supabase.createClient(
             const plan = { id: 'PAY-' + Date.now(), name, amount, grade, groupId, dueDate, createdAt: localDate() };
             paymentPlans.push(plan);
             localStorage.setItem('sys_payment_plans', JSON.stringify(paymentPlans));
+            resetPayFilters(true);
             document.getElementById('paymentPlanFilter').value = plan.id;
             populatePaymentPlanSelect();
             document.getElementById('paymentPlanFilter').value = plan.id;
@@ -3215,17 +3238,48 @@ const supabaseClient = window.supabase.createClient(
             clearPaymentPlanForm();
             showToast('تم إنشاء المستحق وحفظه للمجموعة والصف المحددين', 'success');
         }
+        // ===== فلاتر تبويب الدفع (الصف / المجموعة / اسم المستحق / الحالة) =====
+        function fillPayFGroups(reset) {
+            const sel = $id('payFGroup'); if (!sel) return;
+            const prev = reset ? 'ALL' : sel.value;
+            const list = groupsForGrade($id('payFGrade')?.value || 'ALL');
+            sel.innerHTML = '<option value="ALL">كل المجموعات</option>' + list.map(g => `<option value="${g.id}">${esc(g.name)} — ${esc(g.days || '')} — ${timeLabel(g)}</option>`).join('');
+            sel.value = (prev === 'ALL' || list.some(g => g.id === prev)) ? prev : 'ALL';
+        }
+        function planMatchesPayFilters(p) {
+            const gr = $id('payFGrade')?.value || 'ALL', gp = $id('payFGroup')?.value || 'ALL', q = ($id('payFPlanSearch')?.value || '').trim().toLowerCase();
+            if (gr !== 'ALL' && p.grade !== gr) return false;
+            if (gp !== 'ALL') {
+                if (p.groupId === 'ALL') { const g = groups.find(x => x.id === gp); if (g && g.grade !== p.grade) return false; }
+                else if (p.groupId !== gp) return false;
+            }
+            if (q && !String(p.name).toLowerCase().includes(q)) return false;
+            return true;
+        }
+        function payFilterChanged(gradeChanged) {
+            if (gradeChanged) fillPayFGroups(true);
+            populatePaymentPlanSelect();
+            renderPaymentsTable();
+        }
+        function resetPayFilters(silent) {
+            ['payFGrade', 'payFGroup', 'payFStatus'].forEach(id => { const e = $id(id); if (e) e.value = 'ALL'; });
+            const q = $id('payFPlanSearch'); if (q) q.value = '';
+            fillPayFGroups(true);
+            if (!silent) { populatePaymentPlanSelect(); renderPaymentsTable(); }
+        }
         function populatePaymentPlanSelect() {
             const sel = document.getElementById('paymentPlanFilter');
             if (!sel) return;
+            fillPayFGroups();
             const previous = sel.value;
-            sel.innerHTML = paymentPlans.length
-                ? paymentPlans.slice().reverse().map(p => {
+            const list = paymentPlans.filter(planMatchesPayFilters);
+            sel.innerHTML = list.length
+                ? list.slice().reverse().map(p => {
                     const g = groups.find(x => x.id === p.groupId);
                     return `<option value="${p.id}">${esc(p.name)} — ${esc(p.amount)} جنيه — ${esc(p.grade)} — ${g ? esc(g.name + ' (' + (g.days || '') + ' ' + timeLabel(g) + ')') : (p.groupId === 'ALL' ? 'كل مجموعات الصف' : 'مجموعة محذوفة')}</option>`;
                 }).join('')
-                : '<option value="">لا توجد مستحقات بعد — أنشئ مستحقًا أولًا</option>';
-            if (paymentPlans.some(p => p.id === previous)) sel.value = previous;
+                : (paymentPlans.length ? '<option value="">لا يوجد مستحق مطابق للفلاتر</option>' : '<option value="">لا توجد مستحقات بعد — أنشئ مستحقًا أولًا</option>');
+            if (list.some(p => p.id === previous)) sel.value = previous;
         }
         // المبلغ المدفوع (يدعم السجلات القديمة التي كانت "دفع/لم يدفع" فقط)
         function paidAmountOf(plan, rec) {
@@ -3381,8 +3435,11 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
             }
             const amount = Number(plan.amount);
             const search = ($id('paymentStudentSearch')?.value || '').trim().toLowerCase();
-            const groupAll = students.filter(st => planApplies(plan, st));
-            const view = groupAll.filter(st => st.name.toLowerCase().includes(search) || String(st.code).toLowerCase().includes(search));
+            const fGroup = $id('payFGroup')?.value || 'ALL', fStatus = $id('payFStatus')?.value || 'ALL';
+            const groupAll = students.filter(st => planApplies(plan, st) && (fGroup === 'ALL' || st.groupId === fGroup));
+            const statusOf = st => { const pd = paidAmountOf(plan, getPaymentRecord(plan.id, st.id)); return (amount > 0 && pd >= amount) ? 'paid' : (pd > 0 ? 'partial' : 'unpaid'); };
+            const view = groupAll.filter(st => (st.name.toLowerCase().includes(search) || String(st.code).toLowerCase().includes(search))
+                && (fStatus === 'ALL' || (fStatus === 'notfull' ? statusOf(st) !== 'paid' : statusOf(st) === fStatus)));
             const paidOf = st => paidAmountOf(plan, getPaymentRecord(plan.id, st.id));
             const full = groupAll.filter(st => amount > 0 && paidOf(st) >= amount).length;
             const partial = groupAll.filter(st => paidOf(st) > 0 && paidOf(st) < amount).length;
@@ -3413,7 +3470,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
                         ${paidAmt > 0 ? `<button onclick="printReceipt('${plan.id}','${st.id}')" title="طباعة إيصال" class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-700 font-bold ml-1"><i class="fa-solid fa-print"></i></button><button onclick="sendPaymentReceipt('${plan.id}','${st.id}','parent')" title="إرسال إيصال سداد لولي الأمر" class="px-2.5 py-1.5 rounded-lg bg-purple-50 text-purple-700 font-bold ml-1"><i class="fa-solid fa-receipt ml-1"></i>إيصال لولي الأمر</button>` : ''}
                     </td>
                 </tr>`;
-            }).join('') || '<tr><td colspan="10" class="p-6 text-center text-slate-500">لا يوجد طلاب مطابقون في المجموعة المحددة.</td></tr>';
+            }).join('') || '<tr><td colspan="10" class="p-6 text-center text-slate-500">لا يوجد طلاب مطابقون للفلاتر المحددة.</td></tr>';
         }
 
         // EXPORT ALL DATA TO EXCEL (SheetJS)
