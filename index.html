@@ -290,7 +290,7 @@
                     <img class="app-logo w-full h-auto block" alt="Ahmed Gaber English">
                 </div>
                 <h2 class="text-2xl font-black text-[#0F172A]">تسجيل دخول المسؤول</h2>
-                <p class="text-sm font-bold" style="color:#fcd34d!important">أهلاً بعودتك 👋</p>
+                
                 <p class="text-xs text-[#64748B] font-medium">نظام إدارة وحضور الطلاب والامتحانات والمراحل الثانوية</p>
             </div>
             <form onsubmit="handleLogin(event)" class="space-y-4">
@@ -467,7 +467,7 @@
                 <div class="flex flex-col sm:flex-row justify-between items-center bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm gap-4">
                     <div>
                         <h2 class="text-base font-bold text-[#0F172A]">إدارة المجموعات ومواعيد الحصص</h2>
-                        <p class="text-xs text-[#64748B]">إنشاء/تعديل/حذف المجموعات وتحديد أيام التوقيت المسموح بها (توقيت 12 ساعة لضبط الغياب التلقائي بعد 15 دقيقة)</p>
+
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto"><select id="groupsGradeFilter" onchange="renderGroupsCards()" class="p-2.5 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-bold outline-none"><option value="ALL">كل الصفوف</option><option value="الصف الأول الثانوي">الصف الأول الثانوي</option><option value="الصف الثاني الثانوي">الصف الثاني الثانوي</option><option value="الصف الثالث الثانوي">الصف الثالث الثانوي</option></select><button onclick="openDayOffModal()" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-sm whitespace-nowrap"><i class="fa-solid fa-calendar-xmark"></i> إلغاء غياب يوم</button><button onclick="openAddGroupModal()" class="px-4 py-2.5 bg-[#2563EB] hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-sm">
                         <i class="fa-solid fa-plus"></i> إضافة مجموعة جديدة
@@ -590,7 +590,7 @@
                 <div class="bg-white p-5 rounded-2xl border border-[#E2E8F0] shadow-sm flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div>
                         <h2 class="text-base font-bold text-[#0F172A]">سجل الحضور وإشعارات الواتساب</h2>
-                        <p class="text-xs text-[#64748B]">الغياب بيتسجل تلقائياً بعد 15 دقيقة من موعد الحصة (الإشعارات من زر "إشعار ولي الأمر" في كل صف)</p>
+                     
                     </div>
                     <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         <select id="absenceGroupSelect" onchange="renderLogsTable()" title="فلتر المجموعة" class="px-3 py-2 bg-[#F1F5F9] border border-[#E2E8F0] rounded-xl text-xs font-bold outline-none max-w-[220px]"></select>
@@ -4246,7 +4246,7 @@ ${row('إجمالي المطلوب', n(total) + ' جنيه')}${row('إجمالي
                     : d > 0 ? `<span class="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full font-bold">بعد ${d} د</span>`
                     : '<span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full font-bold">بدأت</span>';
                 return `<div class="p-3 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-between gap-2"><div class="min-w-0"><div class="font-black text-[#0F172A]">${fmtGroupRange(forDay(g))} — ${esc(g.name)}</div><div class="text-amber-600 font-bold mt-0.5">${esc(g.grade || '')} <span class="text-[#64748B] font-normal">• ${n} طالب</span></div></div>${badge}</div>`;
-            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">لا توجد حصص اليوم 🎉</div>';
+            }).join('') : '<div class="col-span-full text-center text-[#64748B] p-3">مفيش حصص النهارده </div>';
         }
         function checkClassReminders() {
             if (!cloudReady) return;
